@@ -1,0 +1,7 @@
+{
+  "@@locale": "vi",
+  "appTitle": "DualCal",
+  "@appTitle": {
+    "description": "Tên ứng dụng"
+  }
+}
