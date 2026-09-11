@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../models/calendar_event.dart';
+import '../../screens/modals/event_editor_modal.dart';
+import '../constants/event_colors.dart';
+import '../providers/event_provider.dart';
 import '../utils/lunar_calendar_service.dart';
 
 /// Shared content for the selected day's detail — used as the desktop side
 /// panel and as the body of the mobile bottom-sheet modal, so the two
 /// layouts never duplicate this UI.
-///
-/// Event list wiring lands in Milestone 3 once `EventProvider` exists.
 class DayDetailContent extends StatelessWidget {
   const DayDetailContent({super.key, required this.date});
 
@@ -18,6 +21,7 @@ class DayDetailContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final lunar = _lunarCalendarService.solarToLunar(date);
     final theme = Theme.of(context);
+    final events = context.watch<EventProvider>().eventsForDate(date);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -25,9 +29,19 @@ class DayDetailContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '${date.day}/${date.month}/${date.year}',
-            style: theme.textTheme.headlineSmall,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${date.day}/${date.month}/${date.year}',
+                style: theme.textTheme.headlineSmall,
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                tooltip: 'Thêm ghi chú',
+                onPressed: () => showEventEditorModal(context, initialDate: date),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
@@ -36,12 +50,33 @@ class DayDetailContent extends StatelessWidget {
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),
-          Text(
-            'Chưa có ghi chú cho ngày này.',
-            style: theme.textTheme.bodySmall,
-          ),
+          if (events.isEmpty)
+            Text('Chưa có ghi chú cho ngày này.', style: theme.textTheme.bodySmall)
+          else
+            ...events.map((e) => _EventTile(event: e, date: date)),
         ],
       ),
+    );
+  }
+}
+
+class _EventTile extends StatelessWidget {
+  const _EventTile({required this.event, required this.date});
+
+  final CalendarEvent event;
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        radius: 8,
+        backgroundColor: eventCategoryColors[event.colorTag % eventCategoryColors.length],
+      ),
+      title: Text(event.title),
+      subtitle: event.description == null ? null : Text(event.description!),
+      onTap: () => showEventEditorModal(context, initialDate: date, existing: event),
     );
   }
 }

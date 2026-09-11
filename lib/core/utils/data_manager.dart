@@ -21,10 +21,17 @@ class DataManager {
 
   bool _initialized = false;
 
-  Future<void> initialize() async {
+  /// [hivePath] lets tests point Hive at a plain temp directory via
+  /// `Hive.init` instead of `Hive.initFlutter` (which needs the
+  /// path_provider platform channel, unavailable in plain `flutter test`).
+  Future<void> initialize({String? hivePath}) async {
     if (_initialized) return;
 
-    await Hive.initFlutter();
+    if (hivePath != null) {
+      Hive.init(hivePath);
+    } else {
+      await Hive.initFlutter();
+    }
 
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(CalendarEventAdapter());

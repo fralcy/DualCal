@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/providers/calendar_provider.dart';
+import 'core/providers/event_provider.dart';
 import 'core/utils/data_manager.dart';
 import 'screens/responsive_calendar_screen.dart';
 
@@ -27,6 +28,7 @@ class DualCalApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
+        ChangeNotifierProvider(create: (_) => EventProvider()),
       ],
       child: MaterialApp(
         title: 'DualCal',
