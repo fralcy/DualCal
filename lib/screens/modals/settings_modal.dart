@@ -1,0 +1,98 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/constants/neumorphic_themes.dart';
+import '../../core/providers/settings_provider.dart';
+import '../../core/widgets/neumorphic_button.dart';
+import '../../core/widgets/neumorphic_container.dart';
+
+Future<void> showSettingsModal(BuildContext context) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => const _SettingsSheet(),
+  );
+}
+
+class _SettingsSheet extends StatelessWidget {
+  const _SettingsSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final t = settings.themeConfig;
+
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        child: NeumorphicContainer(
+          padding: const EdgeInsets.all(20),
+          borderRadius: 24,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Giao diện',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: t.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: neumorphicThemePresets
+                    .map((preset) => _ThemeSwatch(preset: preset))
+                    .toList(),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeSwatch extends StatelessWidget {
+  const _ThemeSwatch({required this.preset});
+
+  final NeumorphicThemeConfig preset;
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final selected = settings.themeId == preset.id;
+
+    return NeumorphicButton(
+      selected: selected,
+      onTap: () => settings.setThemeId(preset.id),
+      borderRadius: 16,
+      child: SizedBox(
+        width: 72,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: preset.accent,
+                shape: BoxShape.circle,
+                border: selected
+                    ? Border.all(color: preset.textPrimary, width: 2)
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(preset.label, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+}

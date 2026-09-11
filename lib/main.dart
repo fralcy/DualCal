@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/providers/calendar_provider.dart';
 import 'core/providers/event_provider.dart';
 import 'core/providers/notification_provider.dart';
+import 'core/providers/settings_provider.dart';
 import 'core/utils/data_manager.dart';
 import 'screens/responsive_calendar_screen.dart';
 
@@ -28,6 +29,7 @@ class DualCalApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(
@@ -40,14 +42,29 @@ class DualCalApp extends StatelessWidget {
           },
         ),
       ],
-      child: MaterialApp(
-        title: 'DualCal',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const ResponsiveCalendarScreen(),
+      child: const _ThemedApp(),
+    );
+  }
+}
+
+/// Split out from [DualCalApp] so `MaterialApp`'s theme can watch
+/// [SettingsProvider] — a widget can't watch a provider declared by the
+/// very [MultiProvider] wrapping it.
+class _ThemedApp extends StatelessWidget {
+  const _ThemedApp();
+
+  @override
+  Widget build(BuildContext context) {
+    final themeConfig = context.watch<SettingsProvider>().themeConfig;
+
+    return MaterialApp(
+      title: 'DualCal',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: themeConfig.accent),
+        scaffoldBackgroundColor: themeConfig.background,
+        useMaterial3: true,
       ),
+      home: const ResponsiveCalendarScreen(),
     );
   }
 }

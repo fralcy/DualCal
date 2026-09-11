@@ -6,11 +6,13 @@ import 'package:provider/provider.dart';
 
 import 'package:dual_cal/core/providers/calendar_provider.dart';
 import 'package:dual_cal/core/providers/event_provider.dart';
+import 'package:dual_cal/core/providers/settings_provider.dart';
 import 'package:dual_cal/core/utils/data_manager.dart';
 import 'package:dual_cal/screens/responsive_calendar_screen.dart';
 
 Widget _wrap(Widget child) => MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
       ],

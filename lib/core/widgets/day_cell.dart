@@ -63,8 +63,8 @@ class DayCell extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        margin: const EdgeInsets.all(2),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        margin: const EdgeInsets.all(1),
+        padding: const EdgeInsets.symmetric(vertical: 3),
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
@@ -84,7 +84,8 @@ class DayCell extends StatelessWidget {
                 Text(
                   '${date.day}',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
+                    height: 1.1,
                     fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                     color: solarColor,
                   ),
@@ -93,7 +94,7 @@ class DayCell extends StatelessWidget {
                   lunarDate.day == 1
                       ? '${lunarDate.day}/${lunarDate.month}'
                       : '${lunarDate.day}',
-                  style: TextStyle(fontSize: 10, color: lunarColor),
+                  style: TextStyle(fontSize: 9, height: 1.1, color: lunarColor),
                 ),
               ],
             ),
