@@ -6,6 +6,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/widgets/neumorphic_button.dart';
 import '../../core/widgets/neumorphic_container.dart';
+import 'import_export_modal.dart';
 
 Future<void> showSettingsModal(BuildContext context) {
   return showModalBottomSheet(
@@ -68,6 +69,30 @@ class _SettingsSheet extends StatelessWidget {
                   _LanguageOption(code: 'vi', label: 'Tiếng Việt'),
                   _LanguageOption(code: 'en', label: 'English'),
                 ],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.backupSettingsTitle,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: t.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              NeumorphicButton(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  showImportExportModal(context);
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.backup_outlined, size: 18),
+                    const SizedBox(width: 8),
+                    Text(l10n.backupSettingsTitle),
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
             ],

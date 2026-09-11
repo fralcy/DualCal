@@ -29,6 +29,16 @@
 
   "themeSettingsTitle": "Theme",
   "languageSettingsTitle": "Language",
+  "backupSettingsTitle": "Backup & restore",
+  "exportButton": "Export data",
+  "importButton": "Import data",
+  "importModeMerge": "Merge with existing data",
+  "importModeReplace": "Replace everything",
+  "exportSuccess": "Exported successfully",
+  "exportCancelled": "Export cancelled",
+  "importSuccess": "Imported {count} events",
+  "importCancelled": "Import cancelled",
+  "importError": "Import failed: {error}",
 
   "weekdayMon": "Mon",
   "weekdayTue": "Tue",

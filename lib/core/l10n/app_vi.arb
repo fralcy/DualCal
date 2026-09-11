@@ -35,6 +35,22 @@
 
   "themeSettingsTitle": "Giao diện",
   "languageSettingsTitle": "Ngôn ngữ",
+  "backupSettingsTitle": "Sao lưu & phục hồi",
+  "exportButton": "Xuất dữ liệu",
+  "importButton": "Nhập dữ liệu",
+  "importModeMerge": "Gộp với dữ liệu hiện có",
+  "importModeReplace": "Thay thế toàn bộ",
+  "exportSuccess": "Đã xuất file thành công",
+  "exportCancelled": "Đã huỷ xuất file",
+  "importSuccess": "Đã nhập {count} sự kiện",
+  "@importSuccess": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importCancelled": "Đã huỷ nhập file",
+  "importError": "Lỗi nhập file: {error}",
+  "@importError": {
+    "placeholders": { "error": { "type": "String" } }
+  },
 
   "weekdayMon": "T2",
   "weekdayTue": "T3",

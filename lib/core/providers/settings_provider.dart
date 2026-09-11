@@ -36,4 +36,8 @@ class SettingsProvider extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  /// Re-reads from [DataManager] and notifies — used after a backup import
+  /// overwrites settings directly.
+  void refresh() => notifyListeners();
 }
