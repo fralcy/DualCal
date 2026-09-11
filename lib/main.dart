@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/l10n/app_localizations.dart';
 import 'core/providers/calendar_provider.dart';
 import 'core/providers/event_provider.dart';
 import 'core/providers/notification_provider.dart';
@@ -55,7 +56,8 @@ class _ThemedApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeConfig = context.watch<SettingsProvider>().themeConfig;
+    final settings = context.watch<SettingsProvider>();
+    final themeConfig = settings.themeConfig;
 
     return MaterialApp(
       title: 'DualCal',
@@ -64,6 +66,9 @@ class _ThemedApp extends StatelessWidget {
         scaffoldBackgroundColor: themeConfig.background,
         useMaterial3: true,
       ),
+      locale: Locale(settings.languageCode),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const ResponsiveCalendarScreen(),
     );
   }

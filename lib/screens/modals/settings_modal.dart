@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/neumorphic_themes.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/widgets/neumorphic_button.dart';
 import '../../core/widgets/neumorphic_container.dart';
@@ -22,6 +23,7 @@ class _SettingsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final t = settings.themeConfig;
+    final l10n = AppLocalizations.of(context)!;
 
     return SafeArea(
       child: Container(
@@ -34,7 +36,7 @@ class _SettingsSheet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Giao diện',
+                l10n.themeSettingsTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -48,6 +50,24 @@ class _SettingsSheet extends StatelessWidget {
                 children: neumorphicThemePresets
                     .map((preset) => _ThemeSwatch(preset: preset))
                     .toList(),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.languageSettingsTitle,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: t.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: const [
+                  _LanguageOption(code: 'vi', label: 'Tiếng Việt'),
+                  _LanguageOption(code: 'en', label: 'English'),
+                ],
               ),
               const SizedBox(height: 8),
             ],
@@ -91,6 +111,33 @@ class _ThemeSwatch extends StatelessWidget {
             const SizedBox(height: 6),
             Text(preset.label, style: const TextStyle(fontSize: 12)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption({required this.code, required this.label});
+
+  final String code;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final selected = settings.languageCode == code;
+
+    return NeumorphicButton(
+      selected: selected,
+      onTap: () => settings.setLanguageCode(code),
+      borderRadius: 16,
+      child: SizedBox(
+        width: 100,
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 13),
         ),
       ),
     );

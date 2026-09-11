@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../models/calendar_event.dart';
 import '../../screens/modals/event_editor_modal.dart';
 import '../constants/event_colors.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/event_provider.dart';
+import '../utils/holiday_l10n.dart';
 import '../utils/holiday_service.dart';
 import '../utils/lunar_calendar_service.dart';
 
@@ -23,6 +25,7 @@ class DayDetailContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final lunar = _lunarCalendarService.solarToLunar(date);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final events = context.watch<EventProvider>().eventsForDate(date);
     final holidays = _holidayService.holidaysOnDate(date);
 
@@ -41,15 +44,15 @@ class DayDetailContent extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline),
-                tooltip: 'Thêm ghi chú',
+                tooltip: l10n.addNote,
                 onPressed: () => showEventEditorModal(context, initialDate: date),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Âm lịch: ${lunar.day}/${lunar.month}'
-            '${lunar.isLeapMonth ? " (nhuận)" : ""}/${lunar.year}',
+            '${l10n.lunarDatePrefix}${lunar.day}/${lunar.month}'
+            '${lunar.isLeapMonth ? l10n.leapMonthSuffix : ""}/${lunar.year}',
             style: theme.textTheme.bodyMedium,
           ),
           if (holidays.isNotEmpty) ...[
@@ -67,7 +70,7 @@ class DayDetailContent extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    h.name,
+                    resolveHolidayName(l10n, h.nameKey),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: h.isDayOff
                           ? theme.colorScheme.error
@@ -80,7 +83,7 @@ class DayDetailContent extends StatelessWidget {
           ],
           const SizedBox(height: 16),
           if (events.isEmpty)
-            Text('Chưa có ghi chú cho ngày này.', style: theme.textTheme.bodySmall)
+            Text(l10n.noNotesForDay, style: theme.textTheme.bodySmall)
           else
             ...events.map((e) => _EventTile(event: e, date: date)),
         ],

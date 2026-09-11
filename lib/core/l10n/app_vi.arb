@@ -3,5 +3,64 @@
   "appTitle": "DualCal",
   "@appTitle": {
     "description": "Tên ứng dụng"
-  }
+  },
+
+  "addNote": "Thêm ghi chú",
+  "editNote": "Sửa ghi chú",
+  "titleLabel": "Tiêu đề",
+  "titleRequired": "Nhập tiêu đề",
+  "descriptionLabel": "Ghi chú",
+  "dateTypeSolar": "Dương lịch",
+  "dateTypeLunar": "Âm lịch",
+  "recurrenceNone": "Một lần",
+  "recurrenceYearly": "Hàng năm",
+  "reminderDaysBeforeLabel": "Nhắc trước (số ngày)",
+  "categoryColorLabel": "Màu phân loại",
+  "delete": "Xoá",
+  "save": "Lưu",
+  "lunarDayLabel": "Ngày",
+  "lunarMonthLabel": "Tháng",
+  "lunarYearLabel": "Năm",
+  "leapMonthLabel": "Tháng nhuận",
+  "reminderSameDay": "Đúng ngày",
+  "reminderDaysBeforeChip": "{days} ngày trước",
+  "@reminderDaysBeforeChip": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "addReminderHint": "Thêm số ngày",
+
+  "lunarDatePrefix": "Âm lịch: ",
+  "leapMonthSuffix": " (nhuận)",
+  "noNotesForDay": "Chưa có ghi chú cho ngày này.",
+
+  "themeSettingsTitle": "Giao diện",
+  "languageSettingsTitle": "Ngôn ngữ",
+
+  "weekdayMon": "T2",
+  "weekdayTue": "T3",
+  "weekdayWed": "T4",
+  "weekdayThu": "T5",
+  "weekdayFri": "T6",
+  "weekdaySat": "T7",
+  "weekdaySun": "CN",
+
+  "holidayNewYear": "Tết Dương lịch",
+  "holidayLiberationDay": "Ngày Giải phóng miền Nam",
+  "holidayLaborDay": "Quốc tế Lao động",
+  "holidayNationalDay": "Quốc khánh",
+  "holidayTetEve": "Giao thừa",
+  "holidayTetDay1": "Mùng 1 Tết",
+  "holidayTetDay2": "Mùng 2 Tết",
+  "holidayTetDay3": "Mùng 3 Tết",
+  "holidayHungKings": "Giỗ Tổ Hùng Vương",
+  "holidayLanternFestival": "Rằm tháng Giêng",
+  "holidayVuLan": "Lễ Vu Lan",
+  "holidayMidAutumn": "Tết Trung Thu",
+  "holidayWomensDayVn": "Ngày Phụ nữ Việt Nam",
+  "holidayTeachersDay": "Ngày Nhà giáo Việt Nam",
+  "holidayValentines": "Lễ Tình nhân",
+  "holidayWomensDayIntl": "Quốc tế Phụ nữ",
+  "holidayChildrensDay": "Quốc tế Thiếu nhi",
+  "holidayHalloween": "Halloween",
+  "holidayChristmas": "Giáng sinh"
 }

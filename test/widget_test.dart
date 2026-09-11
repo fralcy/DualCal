@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:dual_cal/core/l10n/app_localizations.dart';
 import 'package:dual_cal/core/providers/calendar_provider.dart';
 import 'package:dual_cal/core/providers/event_provider.dart';
 import 'package:dual_cal/core/providers/settings_provider.dart';
@@ -16,7 +17,15 @@ Widget _wrap(Widget child) => MultiProvider(
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
       ],
-      child: MaterialApp(home: child),
+      child: MaterialApp(
+        // Matches AppSettings.initial()'s default languageCode — without
+        // this the test harness falls back to the system test locale
+        // (en_US) instead of the app's actual default.
+        locale: const Locale('vi'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: child,
+      ),
     );
 
 void main() {

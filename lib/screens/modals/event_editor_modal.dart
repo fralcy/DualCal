@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/event_colors.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/event_provider.dart';
 import '../../core/utils/lunar_calendar_service.dart';
 import '../../models/calendar_event.dart';
@@ -85,6 +86,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -96,32 +98,32 @@ class _EventEditorFormState extends State<_EventEditorForm> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  widget.existing == null ? 'Thêm ghi chú' : 'Sửa ghi chú',
+                  widget.existing == null ? l10n.addNote : l10n.editNote,
                   style: theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Tiêu đề'),
+                  decoration: InputDecoration(labelText: l10n.titleLabel),
                   validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Nhập tiêu đề' : null,
+                      (v == null || v.trim().isEmpty) ? l10n.titleRequired : null,
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Ghi chú'),
+                  decoration: InputDecoration(labelText: l10n.descriptionLabel),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
                 SegmentedButton<EventDateType>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: EventDateType.solar,
-                      label: Text('Dương lịch'),
+                      label: Text(l10n.dateTypeSolar),
                     ),
                     ButtonSegment(
                       value: EventDateType.lunar,
-                      label: Text('Âm lịch'),
+                      label: Text(l10n.dateTypeLunar),
                     ),
                   ],
                   selected: {_dateType},
@@ -131,28 +133,28 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                 if (_dateType == EventDateType.solar)
                   _buildSolarDatePicker(context)
                 else
-                  _buildLunarDatePicker(context),
+                  _buildLunarDatePicker(context, l10n),
                 const SizedBox(height: 16),
                 SegmentedButton<EventRecurrence>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: EventRecurrence.none,
-                      label: Text('Một lần'),
+                      label: Text(l10n.recurrenceNone),
                     ),
                     ButtonSegment(
                       value: EventRecurrence.yearly,
-                      label: Text('Hàng năm'),
+                      label: Text(l10n.recurrenceYearly),
                     ),
                   ],
                   selected: {_recurrence},
                   onSelectionChanged: (s) => setState(() => _recurrence = s.first),
                 ),
                 const SizedBox(height: 16),
-                Text('Nhắc trước (số ngày)', style: theme.textTheme.labelLarge),
+                Text(l10n.reminderDaysBeforeLabel, style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
-                _buildReminderChips(context),
+                _buildReminderChips(context, l10n),
                 const SizedBox(height: 16),
-                Text('Màu phân loại', style: theme.textTheme.labelLarge),
+                Text(l10n.categoryColorLabel, style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 _buildColorPicker(context),
                 const SizedBox(height: 24),
@@ -164,10 +166,10 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                         style: TextButton.styleFrom(
                           foregroundColor: theme.colorScheme.error,
                         ),
-                        child: const Text('Xoá'),
+                        child: Text(l10n.delete),
                       ),
                     const Spacer(),
-                    FilledButton(onPressed: _save, child: const Text('Lưu')),
+                    FilledButton(onPressed: _save, child: Text(l10n.save)),
                   ],
                 ),
               ],
@@ -195,7 +197,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
     );
   }
 
-  Widget _buildLunarDatePicker(BuildContext context) {
+  Widget _buildLunarDatePicker(BuildContext context, AppLocalizations l10n) {
     final daysInMonth = _lunarService.daysInLunarMonth(
       _lunarYear,
       _lunarMonth,
@@ -213,7 +215,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
             Expanded(
               child: DropdownButtonFormField<int>(
                 initialValue: clampedDay,
-                decoration: const InputDecoration(labelText: 'Ngày'),
+                decoration: InputDecoration(labelText: l10n.lunarDayLabel),
                 items: List.generate(
                   daysInMonth,
                   (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
@@ -225,7 +227,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
             Expanded(
               child: DropdownButtonFormField<int>(
                 initialValue: _lunarMonth,
-                decoration: const InputDecoration(labelText: 'Tháng'),
+                decoration: InputDecoration(labelText: l10n.lunarMonthLabel),
                 items: List.generate(
                   12,
                   (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
@@ -240,7 +242,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
             Expanded(
               child: TextFormField(
                 initialValue: '$_lunarYear',
-                decoration: const InputDecoration(labelText: 'Năm'),
+                decoration: InputDecoration(labelText: l10n.lunarYearLabel),
                 keyboardType: TextInputType.number,
                 onChanged: (v) {
                   final y = int.tryParse(v);
@@ -254,21 +256,23 @@ class _EventEditorFormState extends State<_EventEditorForm> {
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             value: _isLeapMonth,
-            title: const Text('Tháng nhuận'),
+            title: Text(l10n.leapMonthLabel),
             onChanged: (v) => setState(() => _isLeapMonth = v ?? false),
           ),
       ],
     );
   }
 
-  Widget _buildReminderChips(BuildContext context) {
+  Widget _buildReminderChips(BuildContext context, AppLocalizations l10n) {
     return Wrap(
       spacing: 8,
       runSpacing: 4,
       children: [
         ..._reminderDaysBefore.map(
           (d) => Chip(
-            label: Text(d == 0 ? 'Đúng ngày' : '$d ngày trước'),
+            label: Text(
+              d == 0 ? l10n.reminderSameDay : l10n.reminderDaysBeforeChip(d),
+            ),
             onDeleted: () => setState(() => _reminderDaysBefore.remove(d)),
           ),
         ),
@@ -277,7 +281,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
           child: TextField(
             controller: _reminderInputController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(hintText: 'Thêm số ngày', isDense: true),
+            decoration: InputDecoration(hintText: l10n.addReminderHint, isDense: true),
             onSubmitted: _addReminderDay,
           ),
         ),

@@ -10,7 +10,7 @@ enum HolidayScope { vietnam, international }
 class HolidayDefinition {
   const HolidayDefinition({
     required this.id,
-    required this.name,
+    required this.nameKey,
     required this.dateType,
     required this.month,
     required this.day,
@@ -20,11 +20,10 @@ class HolidayDefinition {
 
   final String id;
 
-  /// Plain display name. Will become an l10n key lookup once the rest of
-  /// the app's UI text is localized (Milestone 7) — kept as a literal for
-  /// now to match every other screen's current hardcoded-string
-  /// convention.
-  final String name;
+  /// Key into `AppLocalizations` (see `holiday_l10n.dart`'s
+  /// `resolveHolidayName`) — holiday names ship translated like every
+  /// other piece of UI text, not hardcoded to one language.
+  final String nameKey;
 
   final HolidayDateType dateType;
 
@@ -45,7 +44,7 @@ const List<HolidayDefinition> defaultHolidays = [
   // --- Vietnamese public holidays (day off) ---
   HolidayDefinition(
     id: 'vn_new_year',
-    name: 'Tết Dương lịch',
+    nameKey: 'holidayNewYear',
     dateType: HolidayDateType.solar,
     month: 1,
     day: 1,
@@ -54,7 +53,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_liberation_day',
-    name: 'Ngày Giải phóng miền Nam',
+    nameKey: 'holidayLiberationDay',
     dateType: HolidayDateType.solar,
     month: 4,
     day: 30,
@@ -63,7 +62,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_labor_day',
-    name: 'Quốc tế Lao động',
+    nameKey: 'holidayLaborDay',
     dateType: HolidayDateType.solar,
     month: 5,
     day: 1,
@@ -72,7 +71,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_national_day',
-    name: 'Quốc khánh',
+    nameKey: 'holidayNationalDay',
     dateType: HolidayDateType.solar,
     month: 9,
     day: 2,
@@ -85,7 +84,7 @@ const List<HolidayDefinition> defaultHolidays = [
   // day-30 match, which would silently miss short (29-day) years.
   HolidayDefinition(
     id: 'vn_tet_day1',
-    name: 'Mùng 1 Tết',
+    nameKey: 'holidayTetDay1',
     dateType: HolidayDateType.lunar,
     month: 1,
     day: 1,
@@ -94,7 +93,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_tet_day2',
-    name: 'Mùng 2 Tết',
+    nameKey: 'holidayTetDay2',
     dateType: HolidayDateType.lunar,
     month: 1,
     day: 2,
@@ -103,7 +102,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_tet_day3',
-    name: 'Mùng 3 Tết',
+    nameKey: 'holidayTetDay3',
     dateType: HolidayDateType.lunar,
     month: 1,
     day: 3,
@@ -112,7 +111,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_hung_kings',
-    name: 'Giỗ Tổ Hùng Vương',
+    nameKey: 'holidayHungKings',
     dateType: HolidayDateType.lunar,
     month: 3,
     day: 10,
@@ -123,7 +122,7 @@ const List<HolidayDefinition> defaultHolidays = [
   // --- Vietnamese observances (not an official day off) ---
   HolidayDefinition(
     id: 'vn_lantern_festival',
-    name: 'Rằm tháng Giêng',
+    nameKey: 'holidayLanternFestival',
     dateType: HolidayDateType.lunar,
     month: 1,
     day: 15,
@@ -132,7 +131,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_vu_lan',
-    name: 'Lễ Vu Lan',
+    nameKey: 'holidayVuLan',
     dateType: HolidayDateType.lunar,
     month: 7,
     day: 15,
@@ -141,7 +140,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_mid_autumn',
-    name: 'Tết Trung Thu',
+    nameKey: 'holidayMidAutumn',
     dateType: HolidayDateType.lunar,
     month: 8,
     day: 15,
@@ -150,7 +149,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_womens_day',
-    name: 'Ngày Phụ nữ Việt Nam',
+    nameKey: 'holidayWomensDayVn',
     dateType: HolidayDateType.solar,
     month: 10,
     day: 20,
@@ -159,7 +158,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'vn_teachers_day',
-    name: 'Ngày Nhà giáo Việt Nam',
+    nameKey: 'holidayTeachersDay',
     dateType: HolidayDateType.solar,
     month: 11,
     day: 20,
@@ -170,7 +169,7 @@ const List<HolidayDefinition> defaultHolidays = [
   // --- Major international observances (not a day off in Vietnam) ---
   HolidayDefinition(
     id: 'intl_valentines',
-    name: 'Lễ Tình nhân',
+    nameKey: 'holidayValentines',
     dateType: HolidayDateType.solar,
     month: 2,
     day: 14,
@@ -179,7 +178,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'intl_womens_day',
-    name: 'Quốc tế Phụ nữ',
+    nameKey: 'holidayWomensDayIntl',
     dateType: HolidayDateType.solar,
     month: 3,
     day: 8,
@@ -188,7 +187,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'intl_childrens_day',
-    name: 'Quốc tế Thiếu nhi',
+    nameKey: 'holidayChildrensDay',
     dateType: HolidayDateType.solar,
     month: 6,
     day: 1,
@@ -197,7 +196,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'intl_halloween',
-    name: 'Halloween',
+    nameKey: 'holidayHalloween',
     dateType: HolidayDateType.solar,
     month: 10,
     day: 31,
@@ -206,7 +205,7 @@ const List<HolidayDefinition> defaultHolidays = [
   ),
   HolidayDefinition(
     id: 'intl_christmas',
-    name: 'Giáng sinh',
+    nameKey: 'holidayChristmas',
     dateType: HolidayDateType.solar,
     month: 12,
     day: 25,

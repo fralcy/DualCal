@@ -9,7 +9,7 @@ import 'lunar_calendar_service.dart';
 /// year.
 const _tetEve = HolidayDefinition(
   id: 'vn_tet_eve',
-  name: 'Giao thừa',
+  nameKey: 'holidayTetEve',
   dateType: HolidayDateType.lunar,
   month: 12,
   day: 30,

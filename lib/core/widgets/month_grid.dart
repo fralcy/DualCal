@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../providers/calendar_provider.dart';
 import '../utils/holiday_service.dart';
 import 'day_cell.dart';
@@ -18,34 +19,34 @@ class MonthGrid extends StatelessWidget {
   final int firstDayOfWeek;
   final ValueChanged<DateTime> onDaySelected;
 
-  static const _weekdayLabelsMonFirst = [
-    'T2',
-    'T3',
-    'T4',
-    'T5',
-    'T6',
-    'T7',
-    'CN',
-  ];
-  static const _weekdayLabelsSunFirst = [
-    'CN',
-    'T2',
-    'T3',
-    'T4',
-    'T5',
-    'T6',
-    'T7',
-  ];
-
   static const _holidayService = HolidayService();
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final days = calendarProvider.daysInGrid(firstDayOfWeek);
     final today = DateTime.now();
+    final weekdayLabelsMonFirst = [
+      l10n.weekdayMon,
+      l10n.weekdayTue,
+      l10n.weekdayWed,
+      l10n.weekdayThu,
+      l10n.weekdayFri,
+      l10n.weekdaySat,
+      l10n.weekdaySun,
+    ];
+    final weekdayLabelsSunFirst = [
+      l10n.weekdaySun,
+      l10n.weekdayMon,
+      l10n.weekdayTue,
+      l10n.weekdayWed,
+      l10n.weekdayThu,
+      l10n.weekdayFri,
+      l10n.weekdaySat,
+    ];
     final labels = firstDayOfWeek == DateTime.sunday
-        ? _weekdayLabelsSunFirst
-        : _weekdayLabelsMonFirst;
+        ? weekdayLabelsSunFirst
+        : weekdayLabelsMonFirst;
 
     return Column(
       children: [
