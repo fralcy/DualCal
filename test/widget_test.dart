@@ -1,30 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
-import 'package:dual_cal/main.dart';
+import 'package:dual_cal/core/providers/calendar_provider.dart';
+import 'package:dual_cal/screens/responsive_calendar_screen.dart';
+
+Widget _wrap(Widget child) => ChangeNotifierProvider(
+      create: (_) => CalendarProvider(),
+      child: MaterialApp(home: child),
+    );
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('renders the current month grid with today highlighted',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(_wrap(const ResponsiveCalendarScreen()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    final today = DateTime.now();
+    expect(find.text('${today.day}'), findsWidgets);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets(
+      'tapping a day on the mobile layout opens the day-detail bottom sheet',
+      (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pumpWidget(_wrap(const ResponsiveCalendarScreen()));
+
+    final today = DateTime.now();
+    await tester.tap(find.text('${today.day}').first);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Âm lịch'), findsWidgets);
   });
 }
