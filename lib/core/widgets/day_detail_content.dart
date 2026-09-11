@@ -5,6 +5,7 @@ import '../../models/calendar_event.dart';
 import '../../screens/modals/event_editor_modal.dart';
 import '../constants/event_colors.dart';
 import '../providers/event_provider.dart';
+import '../utils/holiday_service.dart';
 import '../utils/lunar_calendar_service.dart';
 
 /// Shared content for the selected day's detail — used as the desktop side
@@ -16,12 +17,14 @@ class DayDetailContent extends StatelessWidget {
   final DateTime date;
 
   static const _lunarCalendarService = LunarCalendarService();
+  static const _holidayService = HolidayService();
 
   @override
   Widget build(BuildContext context) {
     final lunar = _lunarCalendarService.solarToLunar(date);
     final theme = Theme.of(context);
     final events = context.watch<EventProvider>().eventsForDate(date);
+    final holidays = _holidayService.holidaysOnDate(date);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -49,6 +52,32 @@ class DayDetailContent extends StatelessWidget {
             '${lunar.isLeapMonth ? " (nhuận)" : ""}/${lunar.year}',
             style: theme.textTheme.bodyMedium,
           ),
+          if (holidays.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...holidays.map(
+              (h) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    h.isDayOff ? Icons.event_busy : Icons.celebration_outlined,
+                    size: 16,
+                    color: h.isDayOff
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.tertiary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    h.name,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: h.isDayOff
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.tertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           if (events.isEmpty)
             Text('Chưa có ghi chú cho ngày này.', style: theme.textTheme.bodySmall)

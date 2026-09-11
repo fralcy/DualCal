@@ -13,6 +13,8 @@ class DayCell extends StatelessWidget {
     required this.isCurrentMonth,
     required this.isToday,
     required this.isSelected,
+    required this.isDayOff,
+    required this.hasObservance,
     required this.onTap,
   });
 
@@ -21,6 +23,15 @@ class DayCell extends StatelessWidget {
   final bool isCurrentMonth;
   final bool isToday;
   final bool isSelected;
+
+  /// Official public holiday (e.g. Tết, Quốc khánh) — rendered in the
+  /// error/accent color to stand out from regular days.
+  final bool isDayOff;
+
+  /// A non-dayoff observance (e.g. Trung Thu, Valentine's Day) — rendered
+  /// as a small dot rather than recoloring the day number.
+  final bool hasObservance;
+
   final VoidCallback onTap;
 
   @override
@@ -33,6 +44,8 @@ class DayCell extends StatelessWidget {
       solarColor = theme.colorScheme.onPrimary;
     } else if (dimmed) {
       solarColor = theme.disabledColor;
+    } else if (isDayOff) {
+      solarColor = theme.colorScheme.error;
     } else {
       solarColor = theme.colorScheme.onSurface;
     }
@@ -60,23 +73,44 @@ class DayCell extends StatelessWidget {
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        // Stack (not a 3rd Column row) so the observance dot never pushes
+        // the cell taller than the grid's fixed row height allows.
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            Text(
-              '${date.day}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                color: solarColor,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${date.day}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                    color: solarColor,
+                  ),
+                ),
+                Text(
+                  lunarDate.day == 1
+                      ? '${lunarDate.day}/${lunarDate.month}'
+                      : '${lunarDate.day}',
+                  style: TextStyle(fontSize: 10, color: lunarColor),
+                ),
+              ],
+            ),
+            if (hasObservance && !isDayOff)
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.colorScheme.onPrimary
+                        : theme.colorScheme.tertiary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
               ),
-            ),
-            Text(
-              lunarDate.day == 1
-                  ? '${lunarDate.day}/${lunarDate.month}'
-                  : '${lunarDate.day}',
-              style: TextStyle(fontSize: 10, color: lunarColor),
-            ),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../providers/calendar_provider.dart';
+import '../utils/holiday_service.dart';
 import 'day_cell.dart';
 
 /// Renders the current month as a 7-column grid of [DayCell]s, with a
@@ -36,6 +37,8 @@ class MonthGrid extends StatelessWidget {
     'T7',
   ];
 
+  static const _holidayService = HolidayService();
+
   @override
   Widget build(BuildContext context) {
     final days = calendarProvider.daysInGrid(firstDayOfWeek);
@@ -68,6 +71,7 @@ class MonthGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               final date = days[index];
               final lunar = calendarProvider.lunarDateFor(date);
+              final holidays = _holidayService.holidaysOnDate(date);
               return DayCell(
                 date: date,
                 lunarDate: lunar,
@@ -75,6 +79,8 @@ class MonthGrid extends StatelessWidget {
                     date.month == calendarProvider.visibleMonth.month,
                 isToday: _isSameDay(date, today),
                 isSelected: _isSameDay(date, calendarProvider.selectedDate),
+                isDayOff: holidays.any((h) => h.isDayOff),
+                hasObservance: holidays.isNotEmpty,
                 onTap: () => onDaySelected(date),
               );
             },
