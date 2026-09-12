@@ -64,7 +64,6 @@ class DayCell extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         margin: const EdgeInsets.all(1),
-        padding: const EdgeInsets.symmetric(vertical: 3),
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.primary
@@ -73,46 +72,66 @@ class DayCell extends StatelessWidget {
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        // Stack (not a 3rd Column row) so the observance dot never pushes
-        // the cell taller than the grid's fixed row height allows.
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
+        // LayoutBuilder so text scales with the cell's actual rendered
+        // size (which itself now varies with the grid's available
+        // height/width — see MonthGrid) instead of a fixed font size
+        // that's either too small on a roomy desktop row or overflowing
+        // on a cramped mobile one.
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final cellHeight = constraints.maxHeight;
+            final solarFontSize = (cellHeight * 0.30).clamp(13.0, 24.0);
+            final lunarFontSize = (cellHeight * 0.16).clamp(9.0, 14.0);
+            final dotSize = (cellHeight * 0.05).clamp(3.0, 6.0);
+
+            // Stack (not a 3rd Column row) so the observance dot never
+            // pushes the cell taller than the grid's row height allows.
+            return Stack(
+              alignment: Alignment.center,
               children: [
-                Text(
-                  '${date.day}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.1,
-                    fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                    color: solarColor,
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${date.day}',
+                      style: TextStyle(
+                        fontSize: solarFontSize,
+                        height: 1.1,
+                        fontWeight:
+                            isToday ? FontWeight.bold : FontWeight.normal,
+                        color: solarColor,
+                      ),
+                    ),
+                    Text(
+                      lunarDate.day == 1
+                          ? '${lunarDate.day}/${lunarDate.month}'
+                          : '${lunarDate.day}',
+                      style: TextStyle(
+                        fontSize: lunarFontSize,
+                        height: 1.1,
+                        color: lunarColor,
+                      ),
+                    ),
+                  ],
+                ),
+                if (hasObservance && !isDayOff)
+                  Positioned(
+                    bottom: cellHeight * 0.08,
+                    child: Container(
+                      width: dotSize,
+                      height: dotSize,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.tertiary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                ),
-                Text(
-                  lunarDate.day == 1
-                      ? '${lunarDate.day}/${lunarDate.month}'
-                      : '${lunarDate.day}',
-                  style: TextStyle(fontSize: 9, height: 1.1, color: lunarColor),
-                ),
               ],
-            ),
-            if (hasObservance && !isDayOff)
-              Positioned(
-                bottom: 0,
-                child: Container(
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.tertiary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-          ],
+            );
+          },
         ),
       ),
     );
