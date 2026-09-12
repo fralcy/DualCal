@@ -151,7 +151,16 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                     ),
                   ],
                   selected: {_dateType},
-                  onSelectionChanged: (s) => setState(() => _dateType = s.first),
+                  onSelectionChanged: (s) => setState(() {
+                    _dateType = s.first;
+                    // weekly/quarterly only make sense for a solar-anchored
+                    // event — reset to something valid when switching away.
+                    if (_dateType != EventDateType.solar &&
+                        (_recurrence == EventRecurrence.weekly ||
+                            _recurrence == EventRecurrence.quarterly)) {
+                      _recurrence = EventRecurrence.none;
+                    }
+                  }),
                 ),
                 const SizedBox(height: 12),
                 if (_dateType == EventDateType.solar)
@@ -169,6 +178,20 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                       value: EventRecurrence.yearly,
                       label: Text(l10n.recurrenceYearly),
                     ),
+                    if (_dateType == EventDateType.solar)
+                      ButtonSegment(
+                        value: EventRecurrence.weekly,
+                        label: Text(l10n.recurrenceWeekly),
+                      ),
+                    ButtonSegment(
+                      value: EventRecurrence.monthly,
+                      label: Text(l10n.recurrenceMonthly),
+                    ),
+                    if (_dateType == EventDateType.solar)
+                      ButtonSegment(
+                        value: EventRecurrence.quarterly,
+                        label: Text(l10n.recurrenceQuarterly),
+                      ),
                   ],
                   selected: {_recurrence},
                   onSelectionChanged: (s) => setState(() => _recurrence = s.first),
