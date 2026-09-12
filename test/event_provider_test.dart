@@ -108,4 +108,93 @@ void main() {
 
     expect(provider.eventsForDate(DateTime(2026, 3, 3)), isEmpty);
   });
+
+  test('a solar weekly-recurring event fires on the same weekday every week',
+      () async {
+    await provider.addEvent(
+      title: 'Standup',
+      dateType: EventDateType.solar,
+      solarDate: DateTime(2026, 1, 5), // a Monday
+      recurrence: EventRecurrence.weekly,
+    );
+
+    expect(
+      provider.eventsForDate(DateTime(2026, 1, 12)).map((e) => e.title),
+      contains('Standup'),
+    );
+    expect(provider.eventsForDate(DateTime(2026, 1, 6)), isEmpty);
+    expect(provider.eventsForDate(DateTime(2025, 12, 29)), isEmpty);
+  });
+
+  test('a solar monthly-recurring event fires on the same day every month',
+      () async {
+    await provider.addEvent(
+      title: 'Rent',
+      dateType: EventDateType.solar,
+      solarDate: DateTime(2026, 1, 15),
+      recurrence: EventRecurrence.monthly,
+    );
+
+    expect(
+      provider.eventsForDate(DateTime(2026, 4, 15)).map((e) => e.title),
+      contains('Rent'),
+    );
+    expect(provider.eventsForDate(DateTime(2026, 4, 16)), isEmpty);
+    expect(provider.eventsForDate(DateTime(2025, 12, 15)), isEmpty);
+  });
+
+  test(
+      'a solar quarterly-recurring event fires every 3 months, not every month',
+      () async {
+    await provider.addEvent(
+      title: 'Quarterly review',
+      dateType: EventDateType.solar,
+      solarDate: DateTime(2026, 1, 10),
+      recurrence: EventRecurrence.quarterly,
+    );
+
+    expect(
+      provider.eventsForDate(DateTime(2026, 4, 10)).map((e) => e.title),
+      contains('Quarterly review'),
+    );
+    expect(provider.eventsForDate(DateTime(2026, 2, 10)), isEmpty);
+    expect(provider.eventsForDate(DateTime(2026, 3, 10)), isEmpty);
+  });
+
+  test(
+      'a lunar monthly-recurring event anchored on the last day of its month '
+      'keeps landing on the last day of later months regardless of 29 vs 30 days',
+      () async {
+    final daysInMonth3 = lunarService.daysInLunarMonth(2024, 3);
+    final anchorSolar = lunarService.lunarToSolar(daysInMonth3, 3, 2024)!;
+
+    await provider.addEvent(
+      title: 'Rằm cuối tháng',
+      dateType: EventDateType.lunar,
+      lunarDay: daysInMonth3,
+      lunarMonth: 3,
+      lunarYear: 2024,
+      recurrence: EventRecurrence.monthly,
+    );
+
+    final laterMonthStart = lunarService
+        .startOfNextLunarMonth(lunarService.startOfNextLunarMonth(anchorSolar));
+    final laterLunar = lunarService.solarToLunar(laterMonthStart);
+    final daysInLaterMonth = lunarService.daysInLunarMonth(
+      laterLunar.year,
+      laterLunar.month,
+      isLeapMonth: laterLunar.isLeapMonth,
+    );
+    final expectedOccurrence = lunarService.lunarToSolar(
+      daysInLaterMonth,
+      laterLunar.month,
+      laterLunar.year,
+      isLeapMonth: laterLunar.isLeapMonth,
+    )!;
+
+    expect(
+      provider.eventsForDate(expectedOccurrence).map((e) => e.title),
+      contains('Rằm cuối tháng'),
+    );
+  });
 }

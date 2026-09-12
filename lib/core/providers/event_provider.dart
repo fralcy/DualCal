@@ -95,18 +95,32 @@ class EventProvider extends ChangeNotifier {
       final anchor = event.solarDate;
       if (anchor == null) return false;
       final anchorDay = DateTime(anchor.year, anchor.month, anchor.day);
-      if (event.recurrence == EventRecurrence.yearly) {
-        return anchor.month == day.month &&
-            anchor.day == day.day &&
-            !day.isBefore(anchorDay);
+      switch (event.recurrence) {
+        case EventRecurrence.yearly:
+          return anchor.month == day.month &&
+              anchor.day == day.day &&
+              !day.isBefore(anchorDay);
+        case EventRecurrence.weekly:
+          return day.weekday == anchorDay.weekday && !day.isBefore(anchorDay);
+        case EventRecurrence.monthly:
+          return day.day == anchorDay.day && !day.isBefore(anchorDay);
+        case EventRecurrence.quarterly:
+          if (day.isBefore(anchorDay) || day.day != anchorDay.day) {
+            return false;
+          }
+          final monthsDiff =
+              (day.year - anchorDay.year) * 12 + (day.month - anchorDay.month);
+          return monthsDiff % 3 == 0;
+        case EventRecurrence.none:
+          return anchorDay == day;
       }
-      return anchorDay == day;
     }
 
     final lunarDay = event.lunarDay;
     final lunarMonth = event.lunarMonth;
     if (lunarDay == null || lunarMonth == null) return false;
     final dayLunar = _lunarService.solarToLunar(day);
+    final anchorYear = event.lunarYear;
 
     if (event.recurrence == EventRecurrence.yearly) {
       // App-wide convention: a lunar-anchored recurring event always
@@ -116,7 +130,6 @@ class EventProvider extends ChangeNotifier {
       if (dayLunar.day != lunarDay || dayLunar.month != lunarMonth) {
         return false;
       }
-      final anchorYear = event.lunarYear;
       if (anchorYear == null) return true;
       final anchorSolar = _lunarService.lunarToSolar(
         lunarDay,
@@ -127,7 +140,34 @@ class EventProvider extends ChangeNotifier {
       return anchorSolar == null || !day.isBefore(anchorSolar);
     }
 
-    final anchorYear = event.lunarYear;
+    if (event.recurrence == EventRecurrence.monthly) {
+      // Unlike yearly recurrence, a lunar monthly event is expected to also
+      // fire during an inserted leap month (e.g. rằm/mùng một are still
+      // observed then), so no leap filtering here.
+      if (anchorYear == null) return false;
+      final anchorSolar = _lunarService.lunarToSolar(
+        lunarDay,
+        lunarMonth,
+        anchorYear,
+        isLeapMonth: event.isLeapMonth,
+      );
+      if (anchorSolar == null || day.isBefore(anchorSolar)) return false;
+      final anchorIsEndOfMonth = _lunarService.isEndOfLunarMonth(
+        lunarDay,
+        lunarMonth,
+        anchorYear,
+        isLeapMonth: event.isLeapMonth,
+      );
+      final occurrence = _lunarService.lunarMonthlyOccurrenceFor(
+        day,
+        anchorDay: lunarDay,
+        anchorIsEndOfMonth: anchorIsEndOfMonth,
+      );
+      if (occurrence == null) return false;
+      return DateTime(occurrence.year, occurrence.month, occurrence.day) ==
+          day;
+    }
+
     if (anchorYear == null) return false;
     return dayLunar.day == lunarDay &&
         dayLunar.month == lunarMonth &&
