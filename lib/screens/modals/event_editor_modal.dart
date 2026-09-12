@@ -269,28 +269,33 @@ class _EventEditorFormState extends State<_EventEditorForm> {
   }
 
   Widget _buildReminderChips(BuildContext context, AppLocalizations l10n) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 4,
-      children: [
-        ..._reminderDaysBefore.map(
-          (d) => Chip(
-            label: Text(
-              d == 0 ? l10n.reminderSameDay : l10n.reminderDaysBeforeChip(d),
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      alignment: Alignment.topLeft,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          ..._reminderDaysBefore.map(
+            (d) => Chip(
+              label: Text(
+                d == 0 ? l10n.reminderSameDay : l10n.reminderDaysBeforeChip(d),
+              ),
+              onDeleted: () => setState(() => _reminderDaysBefore.remove(d)),
             ),
-            onDeleted: () => setState(() => _reminderDaysBefore.remove(d)),
           ),
-        ),
-        SizedBox(
-          width: 130,
-          child: TextField(
-            controller: _reminderInputController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: l10n.addReminderHint, isDense: true),
-            onSubmitted: _addReminderDay,
+          SizedBox(
+            width: 130,
+            child: TextField(
+              controller: _reminderInputController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(hintText: l10n.addReminderHint, isDense: true),
+              onSubmitted: _addReminderDay,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
