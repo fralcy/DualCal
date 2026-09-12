@@ -307,4 +307,59 @@ class LunarCalendarService {
     }
     return lunarToSolar(lunarDay, lunarMonth, fromLunarYear + 3) ?? fromDay;
   }
+
+  /// Whether lunar [day] is the last day of its month (day 29 in a 29-day
+  /// month, day 30 in a 30-day one). Used to detect a "last day of the
+  /// month" anchor so a monthly-recurring event created on it keeps
+  /// landing on the last day of every later month, not a fixed day number
+  /// that may not exist in a shorter one.
+  bool isEndOfLunarMonth(
+    int day,
+    int month,
+    int year, {
+    bool isLeapMonth = false,
+  }) {
+    return day == daysInLunarMonth(year, month, isLeapMonth: isLeapMonth);
+  }
+
+  /// Solar date of day 1 of the lunar month immediately following the one
+  /// [solarDate] falls in — steps forward exactly one lunar month
+  /// (including a leap month, if that's what comes next) with no
+  /// probing/guessing.
+  DateTime startOfNextLunarMonth(DateTime solarDate) {
+    final lunar = solarToLunar(solarDate);
+    final daysInMonth = daysInLunarMonth(
+      lunar.year,
+      lunar.month,
+      isLeapMonth: lunar.isLeapMonth,
+    );
+    return solarDate.add(Duration(days: daysInMonth - lunar.day + 1));
+  }
+
+  /// Resolves a monthly-recurring lunar anchor — day [anchorDay], or the
+  /// last day of the month when [anchorIsEndOfMonth] — to its occurrence
+  /// within whichever lunar month [forDate] happens to fall in. Used to
+  /// walk a monthly recurrence forward one lunar month (regular or leap)
+  /// at a time via [startOfNextLunarMonth].
+  DateTime? lunarMonthlyOccurrenceFor(
+    DateTime forDate, {
+    required int anchorDay,
+    required bool anchorIsEndOfMonth,
+  }) {
+    final forLunar = solarToLunar(forDate);
+    final daysInThisMonth = daysInLunarMonth(
+      forLunar.year,
+      forLunar.month,
+      isLeapMonth: forLunar.isLeapMonth,
+    );
+    final targetDay = anchorIsEndOfMonth
+        ? daysInThisMonth
+        : (anchorDay > daysInThisMonth ? daysInThisMonth : anchorDay);
+    return lunarToSolar(
+      targetDay,
+      forLunar.month,
+      forLunar.year,
+      isLeapMonth: forLunar.isLeapMonth,
+    );
+  }
 }

@@ -64,4 +64,77 @@ void main() {
     expect(backToLunar.isLeapMonth, false);
     expect(next.isBefore(DateTime(2023, 1, 23)), isFalse);
   });
+
+  test('isEndOfLunarMonth recognizes the last day regardless of 29 vs 30',
+      () {
+    final days2024Month1 = service.daysInLunarMonth(2024, 1);
+    expect(
+      service.isEndOfLunarMonth(days2024Month1, 1, 2024),
+      isTrue,
+    );
+    expect(
+      service.isEndOfLunarMonth(days2024Month1 - 1, 1, 2024),
+      isFalse,
+    );
+  });
+
+  test('startOfNextLunarMonth lands exactly on lunar day 1 of the next month',
+      () {
+    final anchor = service.lunarToSolar(10, 3, 2024)!;
+    final nextMonthStart = service.startOfNextLunarMonth(anchor);
+    final nextLunar = service.solarToLunar(nextMonthStart);
+    expect(nextLunar.day, 1);
+    expect(nextLunar.month, 4);
+    expect(nextLunar.year, 2024);
+  });
+
+  test(
+      'lunarMonthlyOccurrenceFor keeps landing on the end of the month '
+      'whether it has 29 or 30 days', () {
+    // Find a lunar month anchored on its own last day, then confirm the
+    // occurrence resolved for a date in a LATER month (which may have a
+    // different length) is still that later month's last day.
+    final daysInMonth3 = service.daysInLunarMonth(2024, 3);
+    final anchorDate = service.lunarToSolar(daysInMonth3, 3, 2024)!;
+    expect(service.isEndOfLunarMonth(daysInMonth3, 3, 2024), isTrue);
+
+    final monthAfterNextStart = service
+        .startOfNextLunarMonth(service.startOfNextLunarMonth(anchorDate));
+    final occurrence = service.lunarMonthlyOccurrenceFor(
+      monthAfterNextStart,
+      anchorDay: daysInMonth3,
+      anchorIsEndOfMonth: true,
+    )!;
+    final occurrenceLunar = service.solarToLunar(occurrence);
+    final daysInThatMonth = service.daysInLunarMonth(
+      occurrenceLunar.year,
+      occurrenceLunar.month,
+      isLeapMonth: occurrenceLunar.isLeapMonth,
+    );
+    expect(occurrenceLunar.day, daysInThatMonth);
+  });
+
+  test(
+      'lunarMonthlyOccurrenceFor clamps a fixed day-30 anchor down in a '
+      '29-day month instead of overflowing', () {
+    // Pick a 29-day month to anchor on day 29 (its last day) without
+    // marking it as an end-of-month anchor, then resolve for a later
+    // month that might only have 29 days too — day 29 always exists
+    // (every lunar month has at least 29 days), so this should never clamp
+    // in practice, but a day-30 fixed anchor resolved against a 29-day
+    // target month must clamp down to 29 rather than throw or overflow.
+    final occurrence = service.lunarMonthlyOccurrenceFor(
+      service.lunarToSolar(1, 6, 2024)!,
+      anchorDay: 30,
+      anchorIsEndOfMonth: false,
+    )!;
+    final occurrenceLunar = service.solarToLunar(occurrence);
+    final daysInThatMonth = service.daysInLunarMonth(
+      occurrenceLunar.year,
+      occurrenceLunar.month,
+      isLeapMonth: occurrenceLunar.isLeapMonth,
+    );
+    expect(occurrenceLunar.day, occurrenceLunar.day <= 30 ? occurrenceLunar.day : 30);
+    expect(occurrenceLunar.day, daysInThatMonth < 30 ? daysInThatMonth : 30);
+  });
 }

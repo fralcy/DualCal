@@ -13,12 +13,24 @@ enum EventDateType {
   lunar,
 }
 
+/// `weekly`/`quarterly` only make sense for a solar-anchored event (there's
+/// no "lunar week", and a lunar quarter isn't a real cultural concept);
+/// `monthly` applies to both — a solar event repeats on the same
+/// day-of-month, a lunar one on the same lunar day every lunar month
+/// (including any inserted leap month, since e.g. rằm/mùng một are still
+/// observed then).
 @HiveType(typeId: 3)
 enum EventRecurrence {
   @HiveField(0)
   none,
   @HiveField(1)
   yearly,
+  @HiveField(2)
+  weekly,
+  @HiveField(3)
+  monthly,
+  @HiveField(4)
+  quarterly,
 }
 
 /// A user-created note/event attached to a specific date, anchored either to
