@@ -73,8 +73,11 @@ const List<NeumorphicThemeConfig> neumorphicThemePresets = [
     id: 'slate',
     label: 'Slate',
     background: Color(0xFF2B2F36),
-    lightShadow: Color(0xFF3A3F48),
-    darkShadow: Color(0xFF1D2025),
+    // Wider gap than the light presets — a subtle shadow pair reads as
+    // "flat and hard to see" once translated to a dark surface, so the
+    // raised/pressed effect needs more contrast here to stay legible.
+    lightShadow: Color(0xFF484F5C),
+    darkShadow: Color(0xFF121417),
     accent: Color(0xFF7C9CE0),
     textPrimary: Color(0xFFE7EAF0),
     textSecondary: Color(0xFF9CA5B4),

@@ -58,11 +58,16 @@ class _ThemedApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final themeConfig = settings.themeConfig;
+    final brightness =
+        ThemeData.estimateBrightnessForColor(themeConfig.background);
 
     return MaterialApp(
       title: 'DualCal',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: themeConfig.accent),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: themeConfig.accent,
+          brightness: brightness,
+        ),
         scaffoldBackgroundColor: themeConfig.background,
         useMaterial3: true,
       ),
