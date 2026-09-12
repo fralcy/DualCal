@@ -63,26 +63,41 @@ class MonthGrid extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Expanded(
-          child: GridView.builder(
-            padding: EdgeInsets.zero,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-            ),
-            itemCount: days.length,
-            itemBuilder: (context, index) {
-              final date = days[index];
-              final lunar = calendarProvider.lunarDateFor(date);
-              final holidays = _holidayService.holidaysOnDate(date);
-              return DayCell(
-                date: date,
-                lunarDate: lunar,
-                isCurrentMonth:
-                    date.month == calendarProvider.visibleMonth.month,
-                isToday: _isSameDay(date, today),
-                isSelected: _isSameDay(date, calendarProvider.selectedDate),
-                isDayOff: holidays.any((h) => h.isDayOff),
-                hasObservance: holidays.isNotEmpty,
-                onTap: () => onDaySelected(date),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Size cells to exactly fill the available width/height for
+              // the actual row count (5 or 6 depending on the month) —
+              // never forcing a square aspect ratio, and never taller
+              // than the space we have, so the grid needs no scrollbar.
+              final rows = (days.length / 7).ceil();
+              final cellWidth = constraints.maxWidth / 7;
+              final cellHeight = constraints.maxHeight / rows;
+
+              return GridView.builder(
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  childAspectRatio: cellWidth / cellHeight,
+                ),
+                itemCount: days.length,
+                itemBuilder: (context, index) {
+                  final date = days[index];
+                  final lunar = calendarProvider.lunarDateFor(date);
+                  final holidays = _holidayService.holidaysOnDate(date);
+                  return DayCell(
+                    date: date,
+                    lunarDate: lunar,
+                    isCurrentMonth:
+                        date.month == calendarProvider.visibleMonth.month,
+                    isToday: _isSameDay(date, today),
+                    isSelected:
+                        _isSameDay(date, calendarProvider.selectedDate),
+                    isDayOff: holidays.any((h) => h.isDayOff),
+                    hasObservance: holidays.isNotEmpty,
+                    onTap: () => onDaySelected(date),
+                  );
+                },
               );
             },
           ),
