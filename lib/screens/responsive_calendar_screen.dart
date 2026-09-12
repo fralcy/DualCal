@@ -61,6 +61,14 @@ class ResponsiveCalendarScreen extends StatelessWidget {
             const _OpenDayDetailIntent(),
         const SingleActivator(LogicalKeyboardKey.keyS):
             const _OpenSettingsIntent(),
+        // Shift+"/" is bound two ways: browsers/web typically report the
+        // produced character key directly as LogicalKeyboardKey.question
+        // (so the base-key-plus-shift chord below never matches there),
+        // while native desktop platforms report the physical "/" key with
+        // a shift modifier instead — covering both makes "?" work
+        // everywhere regardless of keyboard layout.
+        const SingleActivator(LogicalKeyboardKey.question):
+            const _ShowShortcutHelpIntent(),
         const SingleActivator(LogicalKeyboardKey.slash, shift: true):
             const _ShowShortcutHelpIntent(),
       },

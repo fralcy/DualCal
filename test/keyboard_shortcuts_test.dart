@@ -148,7 +148,8 @@ void main() {
     expect(find.textContaining('Âm lịch'), findsWidgets);
   });
 
-  testWidgets('? opens the shortcuts help sheet', (tester) async {
+  testWidgets('Shift+/ opens the shortcuts help sheet (native-platform chord)',
+      (tester) async {
     await pumpMobile(tester);
     final l10n =
         AppLocalizations.of(tester.element(find.byType(ResponsiveCalendarScreen)))!;
@@ -160,6 +161,12 @@ void main() {
 
     expect(find.text(l10n.shortcutsHelpTitle), findsOneWidget);
   });
+
+  // Browsers report Shift+/ as LogicalKeyboardKey.question directly (via
+  // event.key), not slash+shift — ResponsiveCalendarScreen binds both, but
+  // flutter_test's key-event simulator can't synthesize a bare `question`
+  // press (it has no "physical key" of its own to simulate), so that path
+  // isn't covered by an automated test here.
 
   testWidgets(
       'a focused app-bar NeumorphicButton activates via Enter instead of '
