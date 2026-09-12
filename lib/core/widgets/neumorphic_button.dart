@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/settings_provider.dart';
@@ -31,27 +32,61 @@ class NeumorphicButton extends StatefulWidget {
 
 class _NeumorphicButtonState extends State<NeumorphicButton> {
   bool _pressing = false;
+  bool _focused = false;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: (_) => setState(() => _pressing = true),
-      onTapCancel: () => setState(() => _pressing = false),
-      onTapUp: (_) => setState(() => _pressing = false),
-      child: NeumorphicContainer(
-        padding: widget.padding,
-        borderRadius: widget.borderRadius,
-        pressed: widget.selected || _pressing,
-        child: DefaultTextStyle.merge(
-          style: TextStyle(
-            color: context.watch<SettingsProvider>().themeConfig.textPrimary,
+    final accent = context.watch<SettingsProvider>().themeConfig.accent;
+
+    return FocusableActionDetector(
+      onShowFocusHighlight: (v) => setState(() => _focused = v),
+      mouseCursor: SystemMouseCursors.click,
+      // Bound locally (closer to this widget than any screen-level
+      // Shortcuts, e.g. ResponsiveCalendarScreen's calendar-wide bindings)
+      // so a focused button always activates on Enter/Space itself first,
+      // instead of a broader shortcut intercepting the key first.
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onTap();
+            return null;
+          },
+        ),
+      },
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onTapDown: (_) => setState(() => _pressing = true),
+        onTapCancel: () => setState(() => _pressing = false),
+        onTapUp: (_) => setState(() => _pressing = false),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.borderRadius + 2),
+            border: _focused ? Border.all(color: accent, width: 2) : null,
           ),
-          child: IconTheme.merge(
-            data: IconThemeData(
-              color: context.watch<SettingsProvider>().themeConfig.textPrimary,
+          child: NeumorphicContainer(
+            padding: widget.padding,
+            borderRadius: widget.borderRadius,
+            pressed: widget.selected || _pressing,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                color:
+                    context.watch<SettingsProvider>().themeConfig.textPrimary,
+              ),
+              child: IconTheme.merge(
+                data: IconThemeData(
+                  color: context
+                      .watch<SettingsProvider>()
+                      .themeConfig
+                      .textPrimary,
+                ),
+                child: widget.child,
+              ),
             ),
-            child: widget.child,
           ),
         ),
       ),

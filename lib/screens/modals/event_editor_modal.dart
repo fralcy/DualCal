@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/event_colors.dart';
@@ -376,20 +377,10 @@ class _EventEditorFormState extends State<_EventEditorForm> {
     return Wrap(
       spacing: 8,
       children: List.generate(eventCategoryColors.length, (i) {
-        final selected = i == _colorTag;
-        return GestureDetector(
+        return _ColorSwatch(
+          color: eventCategoryColors[i],
+          selected: i == _colorTag,
           onTap: () => setState(() => _colorTag = i),
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: eventCategoryColors[i],
-              shape: BoxShape.circle,
-              border: selected
-                  ? Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2)
-                  : null,
-            ),
-          ),
         );
       }),
     );
@@ -445,5 +436,67 @@ class _EventEditorFormState extends State<_EventEditorForm> {
       await context.read<EventProvider>().deleteEvent(widget.existing!.id);
     }
     if (mounted) Navigator.of(context).pop();
+  }
+}
+
+/// A single category-color choice — a plain tappable circle that is also
+/// Tab/Enter/Space-reachable, so the color picker doesn't require a mouse.
+class _ColorSwatch extends StatefulWidget {
+  const _ColorSwatch({
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  State<_ColorSwatch> createState() => _ColorSwatchState();
+}
+
+class _ColorSwatchState extends State<_ColorSwatch> {
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return FocusableActionDetector(
+      onShowFocusHighlight: (v) => setState(() => _focused = v),
+      mouseCursor: SystemMouseCursors.click,
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onTap();
+            return null;
+          },
+        ),
+      },
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: widget.color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: _focused
+                  ? primary
+                  : (widget.selected ? onSurface : Colors.transparent),
+              width: 2,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

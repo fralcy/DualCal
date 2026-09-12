@@ -108,7 +108,12 @@ class _SettingsSheet extends StatelessWidget {
                   children: [
                     const Icon(Icons.backup_outlined, size: 18),
                     const SizedBox(width: 8),
-                    Text(l10n.backupSettingsTitle),
+                    Flexible(
+                      child: Text(
+                        l10n.backupSettingsTitle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
