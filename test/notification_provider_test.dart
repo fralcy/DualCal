@@ -123,6 +123,107 @@ void main() {
     }
   });
 
+  test('a solar weekly event schedules 8 upcoming occurrences a week apart',
+      () async {
+    final anchor = DateTime.now().subtract(const Duration(days: 100));
+    final anchorDay = DateTime(anchor.year, anchor.month, anchor.day);
+    final created = await eventProvider.addEvent(
+      title: 'Standup',
+      dateType: EventDateType.solar,
+      solarDate: anchorDay,
+      recurrence: EventRecurrence.weekly,
+      reminderDaysBefore: [0],
+    );
+    await notificationProvider.rescheduleAll();
+
+    final dates = fakeService.scheduled[created.id];
+    expect(dates, isNotNull);
+    expect(dates!.length, 8);
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+    for (final d in dates) {
+      expect(d.weekday, anchorDay.weekday);
+      expect(d.isBefore(todayMidnight), isFalse);
+    }
+    for (var i = 1; i < dates.length; i++) {
+      expect(dates[i].difference(dates[i - 1]).inDays, 7);
+    }
+  });
+
+  test('a solar monthly event schedules 6 upcoming occurrences a month apart',
+      () async {
+    final anchor = DateTime.now().subtract(const Duration(days: 400));
+    final anchorDay = DateTime(anchor.year, anchor.month, anchor.day);
+    final created = await eventProvider.addEvent(
+      title: 'Rent',
+      dateType: EventDateType.solar,
+      solarDate: anchorDay,
+      recurrence: EventRecurrence.monthly,
+      reminderDaysBefore: [0],
+    );
+    await notificationProvider.rescheduleAll();
+
+    final dates = fakeService.scheduled[created.id];
+    expect(dates, isNotNull);
+    expect(dates!.length, 6);
+    for (final d in dates) {
+      expect(d.day, anchorDay.day);
+    }
+  });
+
+  test('a solar quarterly event schedules 4 occurrences 3 months apart',
+      () async {
+    final anchor = DateTime.now().subtract(const Duration(days: 400));
+    final anchorDay = DateTime(anchor.year, anchor.month, anchor.day);
+    final created = await eventProvider.addEvent(
+      title: 'Quarterly review',
+      dateType: EventDateType.solar,
+      solarDate: anchorDay,
+      recurrence: EventRecurrence.quarterly,
+      reminderDaysBefore: [0],
+    );
+    await notificationProvider.rescheduleAll();
+
+    final dates = fakeService.scheduled[created.id];
+    expect(dates, isNotNull);
+    expect(dates!.length, 4);
+    for (var i = 1; i < dates.length; i++) {
+      final monthsDiff = (dates[i].year - dates[i - 1].year) * 12 +
+          (dates[i].month - dates[i - 1].month);
+      expect(monthsDiff, 3);
+    }
+  });
+
+  test(
+      'a lunar monthly event anchored on its month\'s last day schedules '
+      'occurrences always on the last day of their own lunar month',
+      () async {
+    final daysInMonth3 = lunarService.daysInLunarMonth(2024, 3);
+    final created = await eventProvider.addEvent(
+      title: 'Rằm cuối tháng',
+      dateType: EventDateType.lunar,
+      lunarDay: daysInMonth3,
+      lunarMonth: 3,
+      lunarYear: 2024,
+      recurrence: EventRecurrence.monthly,
+      reminderDaysBefore: [0],
+    );
+    await notificationProvider.rescheduleAll();
+
+    final dates = fakeService.scheduled[created.id];
+    expect(dates, isNotNull);
+    expect(dates!.isNotEmpty, isTrue);
+    for (final d in dates) {
+      final lunar = lunarService.solarToLunar(d);
+      final daysInThatMonth = lunarService.daysInLunarMonth(
+        lunar.year,
+        lunar.month,
+        isLeapMonth: lunar.isLeapMonth,
+      );
+      expect(lunar.day, daysInThatMonth);
+    }
+  });
+
   test('deleting an event cancels its scheduled reminders', () async {
     final future = DateTime.now().add(const Duration(days: 20));
     final created = await eventProvider.addEvent(

@@ -28,6 +28,13 @@ class NotificationProvider extends ChangeNotifier {
   /// How many future occurrences to pre-schedule for a recurring event.
   static const _yearsAhead = 2;
 
+  /// Bounded occurrence counts for the higher-frequency recurrence types —
+  /// scheduling years of weekly reminders would be wasteful, so these are
+  /// capped by count instead of by a fixed time horizon.
+  static const _weeklyOccurrenceCount = 8;
+  static const _monthlyOccurrenceCount = 6;
+  static const _quarterlyOccurrenceCount = 4;
+
   final EventProvider _eventProvider;
   final NotificationServiceBase _notificationService;
   final LunarCalendarService _lunarService;
@@ -98,23 +105,75 @@ class NotificationProvider extends ChangeNotifier {
     if (anchor == null) return [];
     final anchorDay = DateTime(anchor.year, anchor.month, anchor.day);
 
-    if (event.recurrence == EventRecurrence.none) {
-      return anchorDay.isBefore(today) ? [] : [anchorDay];
+    switch (event.recurrence) {
+      case EventRecurrence.none:
+        return anchorDay.isBefore(today) ? [] : [anchorDay];
+      case EventRecurrence.yearly:
+        final occurrences = <DateTime>[];
+        for (var i = 0; i <= _yearsAhead; i++) {
+          DateTime candidate;
+          try {
+            candidate = DateTime(today.year + i, anchor.month, anchor.day);
+          } catch (_) {
+            continue; // e.g. Feb 29 in a non-leap year
+          }
+          if (!candidate.isBefore(today) && !candidate.isBefore(anchorDay)) {
+            occurrences.add(candidate);
+          }
+        }
+        return occurrences;
+      case EventRecurrence.weekly:
+        return _stepSolarOccurrences(
+          anchorDay,
+          today,
+          _weeklyOccurrenceCount,
+          (step) => anchorDay.add(Duration(days: 7 * step)),
+        );
+      case EventRecurrence.monthly:
+        return _stepSolarOccurrences(
+          anchorDay,
+          today,
+          _monthlyOccurrenceCount,
+          (step) => _addMonthsClamped(anchorDay, step),
+        );
+      case EventRecurrence.quarterly:
+        return _stepSolarOccurrences(
+          anchorDay,
+          today,
+          _quarterlyOccurrenceCount,
+          (step) => _addMonthsClamped(anchorDay, step * 3),
+        );
     }
+  }
 
-    final occurrences = <DateTime>[];
-    for (var i = 0; i <= _yearsAhead; i++) {
-      DateTime candidate;
-      try {
-        candidate = DateTime(today.year + i, anchor.month, anchor.day);
-      } catch (_) {
-        continue; // e.g. Feb 29 in a non-leap year
-      }
-      if (!candidate.isBefore(today) && !candidate.isBefore(anchorDay)) {
-        occurrences.add(candidate);
-      }
+  /// Walks `stepFn(0), stepFn(1), ...` (each occurrence after the anchor)
+  /// until it finds the first one on/after [today], then collects [count]
+  /// consecutive occurrences from there. Bounded so a very old anchor can't
+  /// spin forever.
+  List<DateTime> _stepSolarOccurrences(
+    DateTime anchorDay,
+    DateTime today,
+    int count,
+    DateTime Function(int step) stepFn,
+  ) {
+    const maxSteps = 10000;
+    var step = 0;
+    while (stepFn(step).isBefore(today) && step < maxSteps) {
+      step++;
     }
-    return occurrences;
+    return [for (var i = 0; i < count; i++) stepFn(step + i)];
+  }
+
+  /// Adds [months] calendar months to [date], clamping the day down when
+  /// the target month is shorter (e.g. Jan 31 + 1 month -> Feb 28/29)
+  /// instead of letting it roll over into the following month.
+  DateTime _addMonthsClamped(DateTime date, int months) {
+    final totalMonthIndex = date.month - 1 + months;
+    final year = date.year + totalMonthIndex ~/ 12;
+    final month = totalMonthIndex % 12 + 1;
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final day = date.day > daysInMonth ? daysInMonth : date.day;
+    return DateTime(year, month, day);
   }
 
   List<DateTime> _resolveLunarOccurrences(
@@ -137,6 +196,51 @@ class NotificationProvider extends ChangeNotifier {
       if (solar == null) return [];
       final day = DateTime(solar.year, solar.month, solar.day);
       return day.isBefore(today) ? [] : [day];
+    }
+
+    if (event.recurrence == EventRecurrence.monthly) {
+      final anchorYear = event.lunarYear;
+      if (anchorYear == null) return [];
+      final anchorSolar = _lunarService.lunarToSolar(
+        lunarDay,
+        lunarMonth,
+        anchorYear,
+        isLeapMonth: event.isLeapMonth,
+      );
+      if (anchorSolar == null) return [];
+      final anchorDay =
+          DateTime(anchorSolar.year, anchorSolar.month, anchorSolar.day);
+      // Unlike yearly recurrence, a lunar monthly event is expected to also
+      // fire during an inserted leap month, so it resolves against
+      // whichever lunar month a probe date actually falls in — no leap
+      // filtering here.
+      final anchorIsEndOfMonth = _lunarService.isEndOfLunarMonth(
+        lunarDay,
+        lunarMonth,
+        anchorYear,
+        isLeapMonth: event.isLeapMonth,
+      );
+
+      final occurrences = <DateTime>[];
+      var probe = anchorDay;
+      const maxIterations = 200;
+      var iterations = 0;
+      while (occurrences.length < _monthlyOccurrenceCount &&
+          iterations < maxIterations) {
+        final occurrence = _lunarService.lunarMonthlyOccurrenceFor(
+          probe,
+          anchorDay: lunarDay,
+          anchorIsEndOfMonth: anchorIsEndOfMonth,
+        );
+        if (occurrence != null && !occurrence.isBefore(today)) {
+          occurrences.add(
+            DateTime(occurrence.year, occurrence.month, occurrence.day),
+          );
+        }
+        probe = _lunarService.startOfNextLunarMonth(probe);
+        iterations++;
+      }
+      return occurrences;
     }
 
     // Yearly lunar recurrence always resolves to the non-leap occurrence
