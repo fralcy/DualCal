@@ -61,6 +61,11 @@ class DayCell extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      // Day selection already has its own arrow-key roving-focus mechanism
+      // (see ResponsiveCalendarScreen) — excluding cells from the normal
+      // Tab order avoids tabbing through 42 cells and having Tab-focus and
+      // arrow-key selection fight over what "Enter" should do.
+      canRequestFocus: false,
       borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
