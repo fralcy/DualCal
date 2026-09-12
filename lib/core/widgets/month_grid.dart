@@ -13,13 +13,21 @@ class MonthGrid extends StatelessWidget {
     required this.calendarProvider,
     required this.firstDayOfWeek,
     required this.onDaySelected,
+    this.useSlideTransition = false,
   });
 
   final CalendarProvider calendarProvider;
   final int firstDayOfWeek;
   final ValueChanged<DateTime> onDaySelected;
 
+  /// Which transition plays when [CalendarProvider.visibleMonth] changes:
+  /// `false` (desktop/wide layouts) crossfades, `true` (mobile/narrow
+  /// layouts, where a horizontal swipe already suggests paging) slides in
+  /// the direction of [CalendarProvider.lastMonthDelta], like a page turn.
+  final bool useSlideTransition;
+
   static const _holidayService = HolidayService();
+  static const _transitionDuration = Duration(milliseconds: 220);
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +81,7 @@ class MonthGrid extends StatelessWidget {
               final cellWidth = constraints.maxWidth / 7;
               final cellHeight = constraints.maxHeight / rows;
 
-              return GridView.builder(
+              final grid = GridView.builder(
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -98,6 +106,44 @@ class MonthGrid extends StatelessWidget {
                     onTap: () => onDaySelected(date),
                   );
                 },
+              );
+
+              final monthKey = ValueKey(
+                '${calendarProvider.visibleMonth.year}-${calendarProvider.visibleMonth.month}',
+              );
+
+              if (!useSlideTransition) {
+                return AnimatedSwitcher(
+                  duration: _transitionDuration,
+                  child: KeyedSubtree(key: monthKey, child: grid),
+                );
+              }
+
+              // Forward (next month) pushes both pages leftward: the new
+              // grid enters from the right, the old one exits to the left.
+              // Backward mirrors this. AnimatedSwitcher runs the outgoing
+              // child's animation in reverse, so distinguishing on
+              // AnimationStatus.reverse gives each child the correct side.
+              final enterFromRight = calendarProvider.lastMonthDelta >= 0;
+              return ClipRect(
+                child: AnimatedSwitcher(
+                  duration: _transitionDuration,
+                  transitionBuilder: (child, animation) {
+                    final isExiting = animation.status == AnimationStatus.reverse;
+                    final beginOffset = isExiting
+                        ? Offset(enterFromRight ? -1 : 1, 0)
+                        : Offset(enterFromRight ? 1 : -1, 0);
+                    final offsetAnimation = Tween<Offset>(
+                      begin: beginOffset,
+                      end: Offset.zero,
+                    ).animate(animation);
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    );
+                  },
+                  child: KeyedSubtree(key: monthKey, child: grid),
+                ),
               );
             },
           ),

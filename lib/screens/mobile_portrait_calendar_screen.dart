@@ -81,6 +81,7 @@ class MobilePortraitCalendarScreen extends StatelessWidget {
             child: MonthGrid(
               calendarProvider: calendar,
               firstDayOfWeek: DateTime.monday,
+              useSlideTransition: true,
               onDaySelected: (date) {
                 calendar.selectDate(date);
                 showDayDetailModal(context, date);

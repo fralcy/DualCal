@@ -22,16 +22,25 @@ class CalendarProvider extends ChangeNotifier {
   late DateTime _selectedDate;
   DateTime get selectedDate => _selectedDate;
 
+  /// Direction of the most recent `visibleMonth` change: +1 moved forward,
+  /// -1 moved backward, 0 for no meaningful direction (e.g. selecting a day
+  /// in the same month). Lets a page-turn-style transition (see MonthGrid)
+  /// know which way to slide.
+  int _lastMonthDelta = 0;
+  int get lastMonthDelta => _lastMonthDelta;
+
   LunarDate lunarDateFor(DateTime solarDate) =>
       _lunarService.solarToLunar(solarDate);
 
   void goToNextMonth() {
+    _lastMonthDelta = 1;
     _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + 1);
     _selectedDate = _clampSelectedDateToVisibleMonth();
     notifyListeners();
   }
 
   void goToPreviousMonth() {
+    _lastMonthDelta = -1;
     _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month - 1);
     _selectedDate = _clampSelectedDateToVisibleMonth();
     notifyListeners();
@@ -49,7 +58,9 @@ class CalendarProvider extends ChangeNotifier {
 
   void goToToday() {
     final now = DateTime.now();
-    _visibleMonth = DateTime(now.year, now.month);
+    final newVisibleMonth = DateTime(now.year, now.month);
+    _lastMonthDelta = _monthDelta(_visibleMonth, newVisibleMonth);
+    _visibleMonth = newVisibleMonth;
     _selectedDate = DateTime(now.year, now.month, now.day);
     notifyListeners();
   }
@@ -57,9 +68,17 @@ class CalendarProvider extends ChangeNotifier {
   void selectDate(DateTime date) {
     _selectedDate = DateTime(date.year, date.month, date.day);
     if (date.year != _visibleMonth.year || date.month != _visibleMonth.month) {
-      _visibleMonth = DateTime(date.year, date.month);
+      final newVisibleMonth = DateTime(date.year, date.month);
+      _lastMonthDelta = _monthDelta(_visibleMonth, newVisibleMonth);
+      _visibleMonth = newVisibleMonth;
     }
     notifyListeners();
+  }
+
+  /// Sign of the month difference between [from] and [to] (-1, 0, or +1).
+  int _monthDelta(DateTime from, DateTime to) {
+    final diff = (to.year - from.year) * 12 + (to.month - from.month);
+    return diff == 0 ? 0 : (diff > 0 ? 1 : -1);
   }
 
   /// Every solar date to render in the current month's grid, including the
