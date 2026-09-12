@@ -81,18 +81,18 @@ class CalendarProvider extends ChangeNotifier {
     return diff == 0 ? 0 : (diff > 0 ? 1 : -1);
   }
 
-  /// Every solar date to render in the current month's grid, including the
-  /// leading/trailing days borrowed from adjacent months to fill full
-  /// weeks. [firstDayOfWeek] uses `DateTime.monday`..`DateTime.sunday`.
+  /// Always 6 fixed rows (42 cells), including the leading/trailing days
+  /// borrowed from adjacent months — a 5-week month would otherwise render
+  /// shorter cells than a 6-week one (different row count -> different
+  /// `childAspectRatio` in MonthGrid), causing a jarring size jump on every
+  /// month change on top of whatever transition is playing.
+  /// [firstDayOfWeek] uses `DateTime.monday`..`DateTime.sunday`.
   List<DateTime> daysInGrid(int firstDayOfWeek) {
     final firstOfMonth = _visibleMonth;
-    final daysInMonth =
-        DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
-
     final leading = (firstOfMonth.weekday - firstDayOfWeek + 7) % 7;
     final start = firstOfMonth.subtract(Duration(days: leading));
 
-    final totalCells = ((leading + daysInMonth + 6) ~/ 7) * 7;
+    const totalCells = 42;
     return List.generate(totalCells, (i) => start.add(Duration(days: i)));
   }
 }

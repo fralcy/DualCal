@@ -5,8 +5,8 @@ import '../providers/calendar_provider.dart';
 import '../utils/holiday_service.dart';
 import 'day_cell.dart';
 
-/// Renders the current month as a 7-column grid of [DayCell]s, with a
-/// weekday header row respecting [firstDayOfWeek].
+/// Renders the current month as a 7-column, 6-row grid of [DayCell]s, with
+/// a weekday header row respecting [firstDayOfWeek].
 class MonthGrid extends StatelessWidget {
   const MonthGrid({
     super.key,
@@ -28,6 +28,12 @@ class MonthGrid extends StatelessWidget {
 
   static const _holidayService = HolidayService();
   static const _transitionDuration = Duration(milliseconds: 220);
+
+  /// Always 6 rows — [CalendarProvider.daysInGrid] always returns 42 cells
+  /// precisely so every month renders at the same cell size; a 5-week
+  /// month rendering taller cells than a 6-week one would add a jarring
+  /// size jump on top of whichever transition is playing.
+  static const _rows = 6;
 
   @override
   Widget build(BuildContext context) {
@@ -73,13 +79,8 @@ class MonthGrid extends StatelessWidget {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // Size cells to exactly fill the available width/height for
-              // the actual row count (5 or 6 depending on the month) —
-              // never forcing a square aspect ratio, and never taller
-              // than the space we have, so the grid needs no scrollbar.
-              final rows = (days.length / 7).ceil();
               final cellWidth = constraints.maxWidth / 7;
-              final cellHeight = constraints.maxHeight / rows;
+              final cellHeight = constraints.maxHeight / _rows;
 
               final grid = GridView.builder(
                 padding: EdgeInsets.zero,
@@ -119,31 +120,11 @@ class MonthGrid extends StatelessWidget {
                 );
               }
 
-              // Forward (next month) pushes both pages leftward: the new
-              // grid enters from the right, the old one exits to the left.
-              // Backward mirrors this. AnimatedSwitcher runs the outgoing
-              // child's animation in reverse, so distinguishing on
-              // AnimationStatus.reverse gives each child the correct side.
-              final enterFromRight = calendarProvider.lastMonthDelta >= 0;
-              return ClipRect(
-                child: AnimatedSwitcher(
-                  duration: _transitionDuration,
-                  transitionBuilder: (child, animation) {
-                    final isExiting = animation.status == AnimationStatus.reverse;
-                    final beginOffset = isExiting
-                        ? Offset(enterFromRight ? -1 : 1, 0)
-                        : Offset(enterFromRight ? 1 : -1, 0);
-                    final offsetAnimation = Tween<Offset>(
-                      begin: beginOffset,
-                      end: Offset.zero,
-                    ).animate(animation);
-                    return SlideTransition(
-                      position: offsetAnimation,
-                      child: child,
-                    );
-                  },
-                  child: KeyedSubtree(key: monthKey, child: grid),
-                ),
+              return _SlideMonthTransition(
+                transitionKey: monthKey,
+                direction: calendarProvider.lastMonthDelta,
+                duration: _transitionDuration,
+                child: grid,
               );
             },
           ),
@@ -154,4 +135,99 @@ class MonthGrid extends StatelessWidget {
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+/// Page-turn transition: the new month enters alongside the current one,
+/// then both slide together in the same direction until the new month has
+/// fully taken the old one's place. Deliberately not built on
+/// [AnimatedSwitcher] — driving both the outgoing and incoming child off a
+/// single [AnimationController] guarantees they move in lockstep, rather
+/// than relying on AnimatedSwitcher's internal forward/reverse timing to
+/// happen to line up.
+class _SlideMonthTransition extends StatefulWidget {
+  const _SlideMonthTransition({
+    required this.child,
+    required this.transitionKey,
+    required this.direction,
+    required this.duration,
+  });
+
+  final Widget child;
+  final Key transitionKey;
+
+  /// Sign of the month change that produced [child]: +1 forward (new
+  /// month slides in from the right), -1 backward (from the left).
+  final int direction;
+
+  final Duration duration;
+
+  @override
+  State<_SlideMonthTransition> createState() => _SlideMonthTransitionState();
+}
+
+class _SlideMonthTransitionState extends State<_SlideMonthTransition>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  Widget? _outgoingChild;
+  int _direction = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..value = 1; // settled — no transition plays for the very first child
+  }
+
+  @override
+  void didUpdateWidget(covariant _SlideMonthTransition oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.transitionKey != widget.transitionKey) {
+      _outgoingChild = oldWidget.child;
+      _direction = widget.direction == 0 ? 1 : widget.direction;
+      _controller
+        ..value = 0
+        ..forward().whenComplete(() {
+          if (mounted) setState(() => _outgoingChild = null);
+        });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final outgoing = _outgoingChild;
+    // Incoming: starts fully off-screen in the direction of travel, ends
+    // centered. Outgoing: starts centered, ends fully off-screen the
+    // opposite way — both driven by the same t, so they move in lockstep.
+    final incomingOffset = Tween<Offset>(
+      begin: Offset(_direction.toDouble(), 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    final outgoingOffset = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(-_direction.toDouble(), 0),
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    return ClipRect(
+      child: Stack(
+        children: [
+          if (outgoing != null)
+            Positioned.fill(
+              child: SlideTransition(position: outgoingOffset, child: outgoing),
+            ),
+          Positioned.fill(
+            child: SlideTransition(
+              position: incomingOffset,
+              child: KeyedSubtree(key: widget.transitionKey, child: widget.child),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
