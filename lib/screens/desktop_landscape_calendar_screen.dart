@@ -64,6 +64,7 @@ class DesktopLandscapeCalendarScreen extends StatelessWidget {
         ],
       ),
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Padding(
