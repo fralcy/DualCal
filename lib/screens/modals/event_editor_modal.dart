@@ -54,6 +54,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
   late bool _isLeapMonth;
   late EventRecurrence _recurrence;
   late List<int> _reminderDaysBefore;
+  late TimeOfDay _reminderTime;
   late int _colorTag;
 
   @override
@@ -72,6 +73,8 @@ class _EventEditorFormState extends State<_EventEditorForm> {
     _isLeapMonth = e?.isLeapMonth ?? false;
     _recurrence = e?.recurrence ?? EventRecurrence.none;
     _reminderDaysBefore = List<int>.from(e?.reminderDaysBefore ?? const [1]);
+    _reminderTime =
+        TimeOfDay(hour: e?.reminderHour ?? 8, minute: e?.reminderMinute ?? 0);
     _colorTag = e?.colorTag ?? 0;
   }
 
@@ -153,6 +156,8 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                 Text(l10n.reminderDaysBeforeLabel, style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 _buildReminderChips(context, l10n),
+                const SizedBox(height: 12),
+                _buildReminderTimePicker(context, l10n),
                 const SizedBox(height: 16),
                 Text(l10n.categoryColorLabel, style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
@@ -289,6 +294,25 @@ class _EventEditorFormState extends State<_EventEditorForm> {
     );
   }
 
+  Widget _buildReminderTimePicker(BuildContext context, AppLocalizations l10n) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.access_time),
+      title: Text(l10n.reminderTimeLabel),
+      trailing: Text(
+        _reminderTime.format(context),
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      onTap: () async {
+        final picked = await showTimePicker(
+          context: context,
+          initialTime: _reminderTime,
+        );
+        if (picked != null) setState(() => _reminderTime = picked);
+      },
+    );
+  }
+
   void _addReminderDay(String value) {
     final n = int.tryParse(value.trim());
     if (n != null && n >= 0 && !_reminderDaysBefore.contains(n)) {
@@ -342,6 +366,8 @@ class _EventEditorFormState extends State<_EventEditorForm> {
         recurrence: _recurrence,
         reminderDaysBefore: _reminderDaysBefore,
         colorTag: _colorTag,
+        reminderHour: _reminderTime.hour,
+        reminderMinute: _reminderTime.minute,
       );
     } else {
       await provider.updateEvent(
@@ -357,6 +383,8 @@ class _EventEditorFormState extends State<_EventEditorForm> {
           recurrence: _recurrence,
           reminderDaysBefore: _reminderDaysBefore,
           colorTag: _colorTag,
+          reminderHour: _reminderTime.hour,
+          reminderMinute: _reminderTime.minute,
         ),
       );
     }

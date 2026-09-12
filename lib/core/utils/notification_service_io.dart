@@ -8,8 +8,6 @@ import '../../models/calendar_event.dart';
 import '../models/upcoming_reminder.dart';
 import 'notification_service_base.dart';
 
-const _reminderHour = 8; // fire reminders at 08:00 local time
-
 /// Mobile/desktop reminder scheduling via `flutter_local_notifications`.
 /// Recurring (yearly) events are NOT scheduled as OS-recurring alarms —
 /// native recurrence only understands the solar calendar, not lunar — so
@@ -84,8 +82,13 @@ class NotificationService implements NotificationServiceBase {
         if (slot >= _maxRemindersPerEvent) break;
 
         final fireDay = occurrenceDay.subtract(Duration(days: daysBefore));
-        final fireAt =
-            DateTime(fireDay.year, fireDay.month, fireDay.day, _reminderHour);
+        final fireAt = DateTime(
+          fireDay.year,
+          fireDay.month,
+          fireDay.day,
+          event.reminderHour,
+          event.reminderMinute,
+        );
         if (fireAt.isBefore(now)) {
           slot++;
           continue;

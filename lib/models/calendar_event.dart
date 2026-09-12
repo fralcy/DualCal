@@ -74,6 +74,14 @@ class CalendarEvent extends HiveObject {
   @HiveField(14)
   DateTime updatedAt;
 
+  /// Time of day (local, 0-23) reminders fire at — shared by every entry
+  /// in [reminderDaysBefore] for this event. Defaults to 08:00.
+  @HiveField(15)
+  int reminderHour;
+
+  @HiveField(16)
+  int reminderMinute;
+
   CalendarEvent({
     required this.id,
     required this.title,
@@ -90,6 +98,8 @@ class CalendarEvent extends HiveObject {
     this.category,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.reminderHour = 8,
+    this.reminderMinute = 0,
   })  : reminderDaysBefore = reminderDaysBefore ?? const [],
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -108,6 +118,8 @@ class CalendarEvent extends HiveObject {
     List<int> reminderDaysBefore = const [],
     int colorTag = 0,
     String? category,
+    int reminderHour = 8,
+    int reminderMinute = 0,
   }) {
     final now = DateTime.now();
     return CalendarEvent(
@@ -126,6 +138,8 @@ class CalendarEvent extends HiveObject {
       category: category,
       createdAt: now,
       updatedAt: now,
+      reminderHour: reminderHour,
+      reminderMinute: reminderMinute,
     );
   }
 
@@ -142,6 +156,8 @@ class CalendarEvent extends HiveObject {
     List<int>? reminderDaysBefore,
     int? colorTag,
     String? category,
+    int? reminderHour,
+    int? reminderMinute,
   }) {
     return CalendarEvent(
       id: id,
@@ -159,6 +175,8 @@ class CalendarEvent extends HiveObject {
       category: category ?? this.category,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      reminderHour: reminderHour ?? this.reminderHour,
+      reminderMinute: reminderMinute ?? this.reminderMinute,
     );
   }
 }

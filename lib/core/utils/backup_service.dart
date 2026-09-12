@@ -129,6 +129,8 @@ class BackupService {
         'category': e.category,
         'createdAt': e.createdAt.toIso8601String(),
         'updatedAt': e.updatedAt.toIso8601String(),
+        'reminderHour': e.reminderHour,
+        'reminderMinute': e.reminderMinute,
       };
 
   CalendarEvent _eventFromJson(Map<String, dynamic> json) {
@@ -159,6 +161,8 @@ class BackupService {
         updatedAt: json['updatedAt'] != null
             ? DateTime.parse(json['updatedAt'] as String)
             : null,
+        reminderHour: json['reminderHour'] as int? ?? 8,
+        reminderMinute: json['reminderMinute'] as int? ?? 0,
       );
     } on TypeError catch (e) {
       throw BackupFormatException('Malformed event entry: $e');

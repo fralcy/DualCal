@@ -26,12 +26,20 @@ class NotificationService implements NotificationServiceBase {
       final occurrenceDay =
           DateTime(occurrence.year, occurrence.month, occurrence.day);
       for (final daysBefore in event.reminderDaysBefore) {
+        final fireDay = occurrenceDay.subtract(Duration(days: daysBefore));
+        final reminderDateTime = DateTime(
+          fireDay.year,
+          fireDay.month,
+          fireDay.day,
+          event.reminderHour,
+          event.reminderMinute,
+        );
         reminders.add(
           UpcomingReminder(
             eventId: event.id,
             eventTitle: event.title,
             occurrenceDate: occurrenceDay,
-            reminderDate: occurrenceDay.subtract(Duration(days: daysBefore)),
+            reminderDate: reminderDateTime,
             daysBefore: daysBefore,
           ),
         );

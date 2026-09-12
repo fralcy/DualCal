@@ -45,6 +45,8 @@ class EventProvider extends ChangeNotifier {
     List<int> reminderDaysBefore = const [],
     int colorTag = 0,
     String? category,
+    int reminderHour = 8,
+    int reminderMinute = 0,
   }) async {
     final event = CalendarEvent.create(
       id: const Uuid().v4(),
@@ -60,6 +62,8 @@ class EventProvider extends ChangeNotifier {
       reminderDaysBefore: reminderDaysBefore,
       colorTag: colorTag,
       category: category,
+      reminderHour: reminderHour,
+      reminderMinute: reminderMinute,
     );
     await _dataManager.saveEvent(event);
     _reload();

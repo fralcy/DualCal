@@ -12,6 +12,7 @@
   "recurrenceNone": "One-time",
   "recurrenceYearly": "Yearly",
   "reminderDaysBeforeLabel": "Remind (days before)",
+  "reminderTimeLabel": "Reminder time",
   "categoryColorLabel": "Category color",
   "delete": "Delete",
   "save": "Save",
