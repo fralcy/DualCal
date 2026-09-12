@@ -6,9 +6,27 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/widgets/neumorphic_button.dart';
 import '../../core/widgets/neumorphic_container.dart';
+import '../responsive_screen.dart';
 import 'import_export_modal.dart';
 
+/// Desktop/landscape shows this as a centered dialog; mobile/portrait keeps
+/// the bottom-sheet presentation.
 Future<void> showSettingsModal(BuildContext context) {
+  final isDesktop = ResponsiveScreen.isDesktopSize(MediaQuery.sizeOf(context));
+
+  if (isDesktop) {
+    return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
+          child: const _SettingsSheet(),
+        ),
+      ),
+    );
+  }
+
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,

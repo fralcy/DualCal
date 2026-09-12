@@ -14,10 +14,14 @@ class ResponsiveScreen extends StatelessWidget {
   final WidgetBuilder mobileBuilder;
   final WidgetBuilder desktopBuilder;
 
-  static bool isDesktop(BoxConstraints constraints) {
-    final width = constraints.maxWidth;
-    final height = constraints.maxHeight;
-    return width >= 720 && width > height && height >= 600;
+  static bool isDesktop(BoxConstraints constraints) =>
+      isDesktopSize(Size(constraints.maxWidth, constraints.maxHeight));
+
+  /// Same breakpoint as [isDesktop], but from a plain [Size] — for call
+  /// sites that only have `MediaQuery.sizeOf(context)` (e.g. deciding how
+  /// to present a modal), not a `LayoutBuilder`'s constraints.
+  static bool isDesktopSize(Size size) {
+    return size.width >= 720 && size.width > size.height && size.height >= 600;
   }
 
   @override

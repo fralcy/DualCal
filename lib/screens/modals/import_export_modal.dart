@@ -8,8 +8,26 @@ import '../../core/utils/backup_file.dart';
 import '../../core/utils/backup_service.dart';
 import '../../core/widgets/neumorphic_button.dart';
 import '../../core/widgets/neumorphic_container.dart';
+import '../responsive_screen.dart';
 
+/// Desktop/landscape shows this as a centered dialog; mobile/portrait keeps
+/// the bottom-sheet presentation.
 Future<void> showImportExportModal(BuildContext context) {
+  final isDesktop = ResponsiveScreen.isDesktopSize(MediaQuery.sizeOf(context));
+
+  if (isDesktop) {
+    return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
+          child: const _ImportExportSheet(),
+        ),
+      ),
+    );
+  }
+
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,

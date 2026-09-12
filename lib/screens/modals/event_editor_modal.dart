@@ -6,15 +6,36 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/event_provider.dart';
 import '../../core/utils/lunar_calendar_service.dart';
 import '../../models/calendar_event.dart';
+import '../responsive_screen.dart';
 
 /// Add/edit sheet for a note/event: title, date (solar picker or lunar
 /// day/month/year + leap toggle), one-time vs yearly recurrence, reminder
 /// offsets, and a category color tag.
+///
+/// Desktop/landscape shows this as a centered dialog (there's no reason to
+/// anchor it to the bottom edge on a wide screen); mobile/portrait keeps
+/// the bottom-sheet presentation.
 Future<void> showEventEditorModal(
   BuildContext context, {
   required DateTime initialDate,
   CalendarEvent? existing,
 }) {
+  final isDesktop = ResponsiveScreen.isDesktopSize(MediaQuery.sizeOf(context));
+  final form = _EventEditorForm(initialDate: initialDate, existing: existing);
+
+  if (isDesktop) {
+    return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480, maxHeight: 680),
+          child: form,
+        ),
+      ),
+    );
+  }
+
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -23,7 +44,7 @@ Future<void> showEventEditorModal(
     ),
     builder: (context) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: _EventEditorForm(initialDate: initialDate, existing: existing),
+      child: form,
     ),
   );
 }
