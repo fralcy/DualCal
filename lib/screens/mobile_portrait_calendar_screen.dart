@@ -62,18 +62,30 @@ class MobilePortraitCalendarScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: NeumorphicContainer(
-          padding: const EdgeInsets.all(8),
-          borderRadius: 20,
-          child: MonthGrid(
-            calendarProvider: calendar,
-            firstDayOfWeek: DateTime.monday,
-            onDaySelected: (date) {
-              calendar.selectDate(date);
-              showDayDetailModal(context, date);
-            },
+      body: GestureDetector(
+        // Swipe left/right to change month — the touch-screen equivalent
+        // of the Page Up/Down keyboard shortcut.
+        onHorizontalDragEnd: (details) {
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity < -200) {
+            calendar.goToNextMonth();
+          } else if (velocity > 200) {
+            calendar.goToPreviousMonth();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: NeumorphicContainer(
+            padding: const EdgeInsets.all(8),
+            borderRadius: 20,
+            child: MonthGrid(
+              calendarProvider: calendar,
+              firstDayOfWeek: DateTime.monday,
+              onDaySelected: (date) {
+                calendar.selectDate(date);
+                showDayDetailModal(context, date);
+              },
+            ),
           ),
         ),
       ),

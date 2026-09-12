@@ -27,12 +27,24 @@ class CalendarProvider extends ChangeNotifier {
 
   void goToNextMonth() {
     _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + 1);
+    _selectedDate = _clampSelectedDateToVisibleMonth();
     notifyListeners();
   }
 
   void goToPreviousMonth() {
     _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month - 1);
+    _selectedDate = _clampSelectedDateToVisibleMonth();
     notifyListeners();
+  }
+
+  /// Keeps the same day-of-month selected across a month change (e.g. the
+  /// 15th stays selected when paging from March to April), clamped down for
+  /// a shorter target month (the 31st in March becomes the 30th in April).
+  DateTime _clampSelectedDateToVisibleMonth() {
+    final daysInMonth =
+        DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
+    final day = _selectedDate.day.clamp(1, daysInMonth);
+    return DateTime(_visibleMonth.year, _visibleMonth.month, day);
   }
 
   void goToToday() {
