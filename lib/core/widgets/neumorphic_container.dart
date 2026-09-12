@@ -24,7 +24,9 @@ class NeumorphicContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.watch<SettingsProvider>().themeConfig;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
       padding: padding,
       decoration: BoxDecoration(
         color: pressed
