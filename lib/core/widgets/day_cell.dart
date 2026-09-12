@@ -62,7 +62,9 @@ class DayCell extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
         margin: const EdgeInsets.all(1),
         decoration: BoxDecoration(
           color: isSelected
@@ -93,8 +95,9 @@ class DayCell extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '${date.day}',
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
                       style: TextStyle(
                         fontSize: solarFontSize,
                         height: 1.1,
@@ -102,15 +105,20 @@ class DayCell extends StatelessWidget {
                             isToday ? FontWeight.bold : FontWeight.normal,
                         color: solarColor,
                       ),
+                      child: Text('${date.day}'),
                     ),
-                    Text(
-                      lunarDate.day == 1
-                          ? '${lunarDate.day}/${lunarDate.month}'
-                          : '${lunarDate.day}',
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
                       style: TextStyle(
                         fontSize: lunarFontSize,
                         height: 1.1,
                         color: lunarColor,
+                      ),
+                      child: Text(
+                        lunarDate.day == 1
+                            ? '${lunarDate.day}/${lunarDate.month}'
+                            : '${lunarDate.day}',
                       ),
                     ),
                   ],
