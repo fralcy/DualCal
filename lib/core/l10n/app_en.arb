@@ -31,6 +31,18 @@
   "leapMonthSuffix": " (leap)",
   "noNotesForDay": "No notes for this day.",
 
+  "shortcutsHelpTitle": "Keyboard shortcuts",
+  "shortcutsMoveDay": "Move selection back/forward a day",
+  "shortcutsMoveWeek": "Move selection back/forward a week",
+  "shortcutsChangeMonth": "Previous/next month",
+  "shortcutsChangeYear": "Previous/next year",
+  "shortcutsGoToday": "Jump to today",
+  "shortcutsQuickAdd": "Quick-add a new event",
+  "shortcutsOpenDayDetail": "View/edit the day's existing events",
+  "shortcutsOpenSettings": "Open settings",
+  "shortcutsShowHelp": "Open this shortcuts sheet",
+  "shortcutsCloseModal": "Close the open dialog/sheet",
+
   "themeSettingsTitle": "Theme",
   "languageSettingsTitle": "Language",
   "backupSettingsTitle": "Backup & restore",

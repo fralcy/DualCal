@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/calendar_event.dart';
@@ -29,64 +30,78 @@ class DayDetailContent extends StatelessWidget {
     final events = context.watch<EventProvider>().eventsForDate(date);
     final holidays = _holidayService.holidaysOnDate(date);
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${date.day}/${date.month}/${date.year}',
-                style: theme.textTheme.headlineSmall,
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                tooltip: l10n.addNote,
-                onPressed: () => showEventEditorModal(context, initialDate: date),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${l10n.lunarDatePrefix}${lunar.day}/${lunar.month}'
-            '${lunar.isLeapMonth ? l10n.leapMonthSuffix : ""}/${lunar.year}',
-            style: theme.textTheme.bodyMedium,
-          ),
-          if (holidays.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ...holidays.map(
-              (h) => Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    h.isDayOff ? Icons.event_busy : Icons.celebration_outlined,
-                    size: 16,
-                    color: h.isDayOff
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.tertiary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    resolveHolidayName(l10n, h.nameKey),
-                    style: theme.textTheme.bodySmall?.copyWith(
+    return Shortcuts(
+      // On desktop this panel is always visible (not a modal), sitting
+      // inside ResponsiveCalendarScreen's calendar-wide Shortcuts scope —
+      // this local mapping (closer to the IconButton/ListTile below than
+      // that outer one) makes sure a focused button/tile here activates
+      // itself on Enter/Space instead of the calendar-wide shortcut
+      // intercepting the key first.
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${date.day}/${date.month}/${date.year}',
+                  style: theme.textTheme.headlineSmall,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  tooltip: l10n.addNote,
+                  onPressed: () =>
+                      showEventEditorModal(context, initialDate: date),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${l10n.lunarDatePrefix}${lunar.day}/${lunar.month}'
+              '${lunar.isLeapMonth ? l10n.leapMonthSuffix : ""}/${lunar.year}',
+              style: theme.textTheme.bodyMedium,
+            ),
+            if (holidays.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ...holidays.map(
+                (h) => Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      h.isDayOff ? Icons.event_busy : Icons.celebration_outlined,
+                      size: 16,
                       color: h.isDayOff
                           ? theme.colorScheme.error
                           : theme.colorScheme.tertiary,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      resolveHolidayName(l10n, h.nameKey),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: h.isDayOff
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.tertiary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
+            const SizedBox(height: 16),
+            if (events.isEmpty)
+              Text(l10n.noNotesForDay, style: theme.textTheme.bodySmall)
+            else
+              ...events.map((e) => _EventTile(event: e, date: date)),
           ],
-          const SizedBox(height: 16),
-          if (events.isEmpty)
-            Text(l10n.noNotesForDay, style: theme.textTheme.bodySmall)
-          else
-            ...events.map((e) => _EventTile(event: e, date: date)),
-        ],
+        ),
       ),
     );
   }

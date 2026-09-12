@@ -37,6 +37,18 @@
   "leapMonthSuffix": " (nhuận)",
   "noNotesForDay": "Chưa có ghi chú cho ngày này.",
 
+  "shortcutsHelpTitle": "Phím tắt",
+  "shortcutsMoveDay": "Lùi/tiến 1 ngày",
+  "shortcutsMoveWeek": "Lùi/tiến 1 tuần",
+  "shortcutsChangeMonth": "Lùi/tiến 1 tháng",
+  "shortcutsChangeYear": "Lùi/tiến 1 năm",
+  "shortcutsGoToday": "Về hôm nay",
+  "shortcutsQuickAdd": "Tạo nhanh sự kiện mới",
+  "shortcutsOpenDayDetail": "Xem/sửa sự kiện đã có trong ngày",
+  "shortcutsOpenSettings": "Mở cài đặt",
+  "shortcutsShowHelp": "Mở bảng phím tắt này",
+  "shortcutsCloseModal": "Đóng hộp thoại/menu đang mở",
+
   "themeSettingsTitle": "Giao diện",
   "languageSettingsTitle": "Ngôn ngữ",
   "backupSettingsTitle": "Sao lưu & phục hồi",
