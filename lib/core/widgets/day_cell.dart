@@ -15,6 +15,8 @@ class DayCell extends StatelessWidget {
     required this.isSelected,
     required this.isDayOff,
     required this.hasObservance,
+    required this.eventColors,
+    required this.hasMoreEventColors,
     required this.onTap,
   });
 
@@ -31,6 +33,21 @@ class DayCell extends StatelessWidget {
   /// A non-dayoff observance (e.g. Trung Thu, Valentine's Day) — rendered
   /// as a small dot rather than recoloring the day number.
   final bool hasObservance;
+
+  /// Up to 3 of the day's own note/event category colors (from
+  /// `eventCategoryColors`), one dot each — deliberately the *actual*
+  /// category color rather than a generic theme accent, since every
+  /// preset theme's accent happens to be close in hue to one of the 8
+  /// selectable category colors (e.g. the "Sand" theme's orange accent vs.
+  /// the orange category), which would make a generic indicator easy to
+  /// mistake for that specific category.
+  final List<Color> eventColors;
+
+  /// Whether the day has more distinct category colors than fit in
+  /// [eventColors] — shown as one extra dot in the theme's own accent
+  /// color, which is never one of the real category dots, so it reads
+  /// unambiguously as "there's more" rather than a 4th category.
+  final bool hasMoreEventColors;
 
   final VoidCallback onTap;
 
@@ -128,18 +145,33 @@ class DayCell extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (hasObservance && !isDayOff)
+                if ((hasObservance && !isDayOff) ||
+                    eventColors.isNotEmpty ||
+                    hasMoreEventColors)
                   Positioned(
                     bottom: cellHeight * 0.08,
-                    child: Container(
-                      width: dotSize,
-                      height: dotSize,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.tertiary,
-                        shape: BoxShape.circle,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final dot in [
+                          if (hasObservance && !isDayOff)
+                            isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.tertiary,
+                          for (final c in eventColors)
+                            isSelected ? theme.colorScheme.onPrimary : c,
+                          if (hasMoreEventColors)
+                            isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.primary,
+                        ])
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: dotSize * 0.3,
+                            ),
+                            child: _Dot(size: dotSize, color: dot),
+                          ),
+                      ],
                     ),
                   ),
               ],
@@ -147,6 +179,22 @@ class DayCell extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  const _Dot({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

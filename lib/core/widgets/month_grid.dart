@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../constants/event_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/calendar_provider.dart';
+import '../providers/event_provider.dart';
 import '../utils/holiday_service.dart';
 import 'day_cell.dart';
 
@@ -38,6 +41,7 @@ class MonthGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final eventProvider = context.watch<EventProvider>();
     final days = calendarProvider.daysInGrid(firstDayOfWeek);
     final today = DateTime.now();
     final weekdayLabelsMonFirst = [
@@ -94,6 +98,22 @@ class MonthGrid extends StatelessWidget {
                   final date = days[index];
                   final lunar = calendarProvider.lunarDateFor(date);
                   final holidays = _holidayService.holidaysOnDate(date);
+
+                  // The day's own distinct category colors, in the order
+                  // they were first seen — capped at 3 dots so the cell
+                  // doesn't get crowded when many differently-tagged notes
+                  // land on the same day (see hasMoreEventColors below for
+                  // what represents "more than that").
+                  final dayEvents = eventProvider.eventsForDate(date);
+                  final uniqueColorTags = <int>{};
+                  for (final e in dayEvents) {
+                    uniqueColorTags.add(e.colorTag % eventCategoryColors.length);
+                  }
+                  final eventColors = uniqueColorTags
+                      .take(3)
+                      .map((tag) => eventCategoryColors[tag])
+                      .toList();
+
                   return DayCell(
                     date: date,
                     lunarDate: lunar,
@@ -104,6 +124,8 @@ class MonthGrid extends StatelessWidget {
                         _isSameDay(date, calendarProvider.selectedDate),
                     isDayOff: holidays.any((h) => h.isDayOff),
                     hasObservance: holidays.isNotEmpty,
+                    eventColors: eventColors,
+                    hasMoreEventColors: uniqueColorTags.length > 3,
                     onTap: () => onDaySelected(date),
                   );
                 },

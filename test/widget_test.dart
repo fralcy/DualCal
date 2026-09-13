@@ -9,7 +9,13 @@ import 'package:dual_cal/core/providers/calendar_provider.dart';
 import 'package:dual_cal/core/providers/event_provider.dart';
 import 'package:dual_cal/core/providers/settings_provider.dart';
 import 'package:dual_cal/core/utils/data_manager.dart';
+import 'package:dual_cal/core/constants/event_colors.dart';
+import 'package:dual_cal/core/widgets/day_cell.dart';
+import 'package:dual_cal/models/calendar_event.dart';
 import 'package:dual_cal/screens/responsive_calendar_screen.dart';
+
+bool _isSameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
 
 Widget _wrap(Widget child) => MultiProvider(
       providers: [
@@ -84,5 +90,84 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Test event'), findsOneWidget);
+  });
+
+  testWidgets(
+      'a day gets its own user-event dot after adding a note, distinct from '
+      'holiday/observance dots', (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(const ResponsiveCalendarScreen()));
+
+    final today = DateTime.now();
+    DayCell todayCell() => tester.widget<DayCell>(
+          find.byWidgetPredicate(
+            (w) => w is DayCell && _isSameDay(w.date, today),
+          ),
+        );
+
+    expect(todayCell().eventColors, isEmpty);
+    expect(todayCell().hasMoreEventColors, isFalse);
+
+    // Add the event directly through the provider rather than driving the
+    // full add-note UI flow — this test is about MonthGrid/DayCell picking
+    // up EventProvider changes and rendering the dot, not about re-proving
+    // the form-submission flow the other tests already cover.
+    // runAsync is required here: addEvent does real Hive file I/O, which
+    // never resolves in testWidgets' fake-time zone without it.
+    await tester.runAsync(() async {
+      await tester
+          .element(find.byType(ResponsiveCalendarScreen))
+          .read<EventProvider>()
+          .addEvent(
+            title: 'Note with a dot',
+            dateType: EventDateType.solar,
+            solarDate: today,
+            colorTag: 2,
+          );
+    });
+    await tester.pumpAndSettle();
+
+    expect(todayCell().eventColors, [eventCategoryColors[2]]);
+    expect(todayCell().hasMoreEventColors, isFalse);
+  });
+
+  testWidgets(
+      'a day with more than 3 distinct note colors caps the dots and shows '
+      'a "more" marker', (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(const ResponsiveCalendarScreen()));
+
+    final today = DateTime.now();
+    final eventProvider = tester
+        .element(find.byType(ResponsiveCalendarScreen))
+        .read<EventProvider>();
+    // See the previous test for why this needs runAsync.
+    await tester.runAsync(() async {
+      for (var tag = 0; tag < 5; tag++) {
+        await eventProvider.addEvent(
+          title: 'Note $tag',
+          dateType: EventDateType.solar,
+          solarDate: today,
+          colorTag: tag,
+        );
+      }
+    });
+    await tester.pumpAndSettle();
+
+    final cell = tester.widget<DayCell>(
+      find.byWidgetPredicate((w) => w is DayCell && _isSameDay(w.date, today)),
+    );
+    // 3 distinct dots, each a real category color used that day (order
+    // isn't guaranteed — it follows however EventProvider returns events,
+    // not necessarily insertion order) — and a "more" marker for the rest.
+    expect(cell.eventColors.toSet(), hasLength(3));
+    for (final color in cell.eventColors) {
+      expect(eventCategoryColors.sublist(0, 5), contains(color));
+    }
+    expect(cell.hasMoreEventColors, isTrue);
   });
 }
