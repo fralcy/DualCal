@@ -157,7 +157,7 @@ class _ThemeSwatch extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Text(preset.label, style: const TextStyle(fontSize: 12)),
+            Text(preset.label, style: const TextStyle(fontSize: 13)),
           ],
         ),
       ),

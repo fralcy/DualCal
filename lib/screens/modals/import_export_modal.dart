@@ -106,7 +106,7 @@ class _ImportExportSheetState extends State<_ImportExportSheet> {
               const SizedBox(height: 12),
               Text(
                 '${l10n.importModeMerge} / ${l10n.importModeReplace}',
-                style: TextStyle(fontSize: 11, color: t.textSecondary),
+                style: TextStyle(fontSize: 13, color: t.textSecondary),
               ),
               Align(
                 alignment: Alignment.centerRight,

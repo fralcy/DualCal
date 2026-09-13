@@ -88,7 +88,7 @@ class DayCell extends StatelessWidget {
           builder: (context, constraints) {
             final cellHeight = constraints.maxHeight;
             final solarFontSize = (cellHeight * 0.30).clamp(13.0, 24.0);
-            final lunarFontSize = (cellHeight * 0.16).clamp(9.0, 14.0);
+            final lunarFontSize = (cellHeight * 0.16).clamp(13.0, 14.0);
             final dotSize = (cellHeight * 0.05).clamp(3.0, 6.0);
 
             // Stack (not a 3rd Column row) so the observance dot never

@@ -61,15 +61,23 @@ class _ThemedApp extends StatelessWidget {
     final brightness =
         ThemeData.estimateBrightnessForColor(themeConfig.background);
 
+    final baseTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: themeConfig.accent,
+        brightness: brightness,
+      ),
+      scaffoldBackgroundColor: themeConfig.background,
+      useMaterial3: true,
+    );
+
     return MaterialApp(
       title: 'DualCal',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: themeConfig.accent,
-          brightness: brightness,
-        ),
-        scaffoldBackgroundColor: themeConfig.background,
-        useMaterial3: true,
+      theme: baseTheme.copyWith(
+        // Material 3's default type scale goes as small as ~11sp
+        // (labelSmall) — floor every named style at 13px so nothing in the
+        // app reads as too small, without having to override every widget
+        // that happens to use bodySmall/labelSmall individually.
+        textTheme: _withMinFontSize(baseTheme.textTheme, 13),
       ),
       locale: Locale(settings.languageCode),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -77,4 +85,33 @@ class _ThemedApp extends StatelessWidget {
       home: const ResponsiveCalendarScreen(),
     );
   }
+}
+
+/// Returns a copy of [base] where every named style with a smaller
+/// [TextStyle.fontSize] than [minSize] is raised to it, leaving styles that
+/// are already at or above it untouched.
+TextTheme _withMinFontSize(TextTheme base, double minSize) {
+  TextStyle? clamped(TextStyle? style) {
+    final size = style?.fontSize;
+    if (style == null || size == null || size >= minSize) return style;
+    return style.copyWith(fontSize: minSize);
+  }
+
+  return base.copyWith(
+    displayLarge: clamped(base.displayLarge),
+    displayMedium: clamped(base.displayMedium),
+    displaySmall: clamped(base.displaySmall),
+    headlineLarge: clamped(base.headlineLarge),
+    headlineMedium: clamped(base.headlineMedium),
+    headlineSmall: clamped(base.headlineSmall),
+    titleLarge: clamped(base.titleLarge),
+    titleMedium: clamped(base.titleMedium),
+    titleSmall: clamped(base.titleSmall),
+    bodyLarge: clamped(base.bodyLarge),
+    bodyMedium: clamped(base.bodyMedium),
+    bodySmall: clamped(base.bodySmall),
+    labelLarge: clamped(base.labelLarge),
+    labelMedium: clamped(base.labelMedium),
+    labelSmall: clamped(base.labelSmall),
+  );
 }
