@@ -29,6 +29,8 @@ class DayDetailContent extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final events = context.watch<EventProvider>().eventsForDate(date);
     final holidays = _holidayService.holidaysOnDate(date);
+    final isVietnamese = Localizations.localeOf(context).languageCode == 'vi';
+    final canChi = isVietnamese ? lunar.canChi : lunar.canChiEnglish;
 
     return Shortcuts(
       // On desktop this panel is always visible (not a modal), sitting
@@ -66,7 +68,8 @@ class DayDetailContent extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               '${l10n.lunarDatePrefix}${lunar.day}/${lunar.month}'
-              '${lunar.isLeapMonth ? l10n.leapMonthSuffix : ""}/${lunar.year}',
+              '${lunar.isLeapMonth ? l10n.leapMonthSuffix : ""} '
+              '${l10n.lunarYearCanChi(canChi)}',
               style: theme.textTheme.bodyMedium,
             ),
             if (holidays.isNotEmpty) ...[

@@ -35,6 +35,10 @@
 
   "lunarDatePrefix": "Âm lịch: ",
   "leapMonthSuffix": " (nhuận)",
+  "lunarYearCanChi": "năm {canChi}",
+  "@lunarYearCanChi": {
+    "placeholders": { "canChi": { "type": "String" } }
+  },
   "noNotesForDay": "Chưa có ghi chú cho ngày này.",
 
   "shortcutsHelpTitle": "Phím tắt",

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/event_colors.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/models/lunar_date.dart';
 import '../../core/providers/event_provider.dart';
 import '../../core/utils/lunar_calendar_service.dart';
 import '../../models/calendar_event.dart';
@@ -292,7 +293,17 @@ class _EventEditorFormState extends State<_EventEditorForm> {
             Expanded(
               child: TextFormField(
                 initialValue: '$_lunarYear',
-                decoration: InputDecoration(labelText: l10n.lunarYearLabel),
+                decoration: InputDecoration(
+                  labelText: l10n.lunarYearLabel,
+                  // The numeric year is still what's stored (and what leap
+                  // years are computed from) — this just shows its Can Chi
+                  // name so the field stays meaningful without a mouse-only
+                  // picker or a lossy Can-Chi-only input.
+                  helperText:
+                      Localizations.localeOf(context).languageCode == 'vi'
+                          ? canChiForYear(_lunarYear)
+                          : canChiEnglishForYear(_lunarYear),
+                ),
                 keyboardType: TextInputType.number,
                 onChanged: (v) {
                   final y = int.tryParse(v);

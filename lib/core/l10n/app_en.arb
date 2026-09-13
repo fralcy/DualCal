@@ -29,6 +29,10 @@
 
   "lunarDatePrefix": "Lunar: ",
   "leapMonthSuffix": " (leap)",
+  "lunarYearCanChi": "the year of {canChi}",
+  "@lunarYearCanChi": {
+    "placeholders": { "canChi": { "type": "String" } }
+  },
   "noNotesForDay": "No notes for this day.",
 
   "shortcutsHelpTitle": "Keyboard shortcuts",
