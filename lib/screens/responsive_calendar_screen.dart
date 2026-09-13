@@ -66,8 +66,11 @@ class ResponsiveCalendarScreen extends StatelessWidget {
         // (so the base-key-plus-shift chord below never matches there),
         // while native desktop platforms report the physical "/" key with
         // a shift modifier instead — covering both makes "?" work
-        // everywhere regardless of keyboard layout.
-        const SingleActivator(LogicalKeyboardKey.question):
+        // everywhere regardless of keyboard layout. Shift is still
+        // physically held to type "?", so both activators must declare
+        // shift: true — SingleActivator requires an exact modifier-state
+        // match, and would otherwise refuse to fire while Shift is down.
+        const SingleActivator(LogicalKeyboardKey.question, shift: true):
             const _ShowShortcutHelpIntent(),
         const SingleActivator(LogicalKeyboardKey.slash, shift: true):
             const _ShowShortcutHelpIntent(),
