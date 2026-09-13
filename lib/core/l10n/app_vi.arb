@@ -12,6 +12,7 @@
   "descriptionLabel": "Ghi chú",
   "dateTypeSolar": "Dương lịch",
   "dateTypeLunar": "Âm lịch",
+  "recurrenceLabel": "Lặp lại",
   "recurrenceNone": "Một lần",
   "recurrenceYearly": "Hàng năm",
   "recurrenceWeekly": "Hàng tuần",

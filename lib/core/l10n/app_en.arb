@@ -9,6 +9,7 @@
   "descriptionLabel": "Notes",
   "dateTypeSolar": "Solar",
   "dateTypeLunar": "Lunar",
+  "recurrenceLabel": "Repeat",
   "recurrenceNone": "One-time",
   "recurrenceYearly": "Yearly",
   "recurrenceWeekly": "Weekly",

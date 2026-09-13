@@ -170,33 +170,49 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                 else
                   _buildLunarDatePicker(context, l10n),
                 const SizedBox(height: 16),
-                SegmentedButton<EventRecurrence>(
-                  segments: [
-                    ButtonSegment(
+                Text(l10n.recurrenceLabel, style: theme.textTheme.labelLarge),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    // Ordered from "doesn't repeat" through shortest to
+                    // longest interval, rather than an arbitrary grouping —
+                    // easier to scan than the yearly-first order this used
+                    // to have.
+                    _RecurrenceChip(
+                      label: l10n.recurrenceNone,
                       value: EventRecurrence.none,
-                      label: Text(l10n.recurrenceNone),
-                    ),
-                    ButtonSegment(
-                      value: EventRecurrence.yearly,
-                      label: Text(l10n.recurrenceYearly),
+                      groupValue: _recurrence,
+                      onSelected: (v) => setState(() => _recurrence = v),
                     ),
                     if (_dateType == EventDateType.solar)
-                      ButtonSegment(
+                      _RecurrenceChip(
+                        label: l10n.recurrenceWeekly,
                         value: EventRecurrence.weekly,
-                        label: Text(l10n.recurrenceWeekly),
+                        groupValue: _recurrence,
+                        onSelected: (v) => setState(() => _recurrence = v),
                       ),
-                    ButtonSegment(
+                    _RecurrenceChip(
+                      label: l10n.recurrenceMonthly,
                       value: EventRecurrence.monthly,
-                      label: Text(l10n.recurrenceMonthly),
+                      groupValue: _recurrence,
+                      onSelected: (v) => setState(() => _recurrence = v),
                     ),
                     if (_dateType == EventDateType.solar)
-                      ButtonSegment(
+                      _RecurrenceChip(
+                        label: l10n.recurrenceQuarterly,
                         value: EventRecurrence.quarterly,
-                        label: Text(l10n.recurrenceQuarterly),
+                        groupValue: _recurrence,
+                        onSelected: (v) => setState(() => _recurrence = v),
                       ),
+                    _RecurrenceChip(
+                      label: l10n.recurrenceYearly,
+                      value: EventRecurrence.yearly,
+                      groupValue: _recurrence,
+                      onSelected: (v) => setState(() => _recurrence = v),
+                    ),
                   ],
-                  selected: {_recurrence},
-                  onSelectionChanged: (s) => setState(() => _recurrence = s.first),
                 ),
                 const SizedBox(height: 16),
                 Text(l10n.reminderDaysBeforeLabel, style: theme.textTheme.labelLarge),
@@ -293,17 +309,7 @@ class _EventEditorFormState extends State<_EventEditorForm> {
             Expanded(
               child: TextFormField(
                 initialValue: '$_lunarYear',
-                decoration: InputDecoration(
-                  labelText: l10n.lunarYearLabel,
-                  // The numeric year is still what's stored (and what leap
-                  // years are computed from) — this just shows its Can Chi
-                  // name so the field stays meaningful without a mouse-only
-                  // picker or a lossy Can-Chi-only input.
-                  helperText:
-                      Localizations.localeOf(context).languageCode == 'vi'
-                          ? canChiForYear(_lunarYear)
-                          : canChiEnglishForYear(_lunarYear),
-                ),
+                decoration: InputDecoration(labelText: l10n.lunarYearLabel),
                 keyboardType: TextInputType.number,
                 onChanged: (v) {
                   final y = int.tryParse(v);
@@ -312,6 +318,20 @@ class _EventEditorFormState extends State<_EventEditorForm> {
               ),
             ),
           ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            // The numeric year above is still what's stored (and what leap
+            // years are computed from) — this is just its Can Chi name, as
+            // a caption under the whole row instead of a per-field
+            // helperText (which made the 3 fields distort/misalign since
+            // only one of them would grow taller than the others).
+            Localizations.localeOf(context).languageCode == 'vi'
+                ? canChiForYear(_lunarYear)
+                : canChiEnglishForYear(_lunarYear),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ),
         if (canBeLeap)
           CheckboxListTile(
@@ -447,6 +467,33 @@ class _EventEditorFormState extends State<_EventEditorForm> {
       await context.read<EventProvider>().deleteEvent(widget.existing!.id);
     }
     if (mounted) Navigator.of(context).pop();
+  }
+}
+
+/// One recurrence choice in a single-select group — a [ChoiceChip] sizes to
+/// its own label and wraps to the next line instead of being squeezed into
+/// an equal-width segment (unlike [SegmentedButton], which was cramming 5
+/// short Vietnamese labels into segments narrow enough to wrap mid-word).
+class _RecurrenceChip extends StatelessWidget {
+  const _RecurrenceChip({
+    required this.label,
+    required this.value,
+    required this.groupValue,
+    required this.onSelected,
+  });
+
+  final String label;
+  final EventRecurrence value;
+  final EventRecurrence groupValue;
+  final ValueChanged<EventRecurrence> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: value == groupValue,
+      onSelected: (_) => onSelected(value),
+    );
   }
 }
 
