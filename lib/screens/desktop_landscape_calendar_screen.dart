@@ -28,15 +28,20 @@ class DesktopLandscapeCalendarScreen extends StatelessWidget {
         backgroundColor: themeConfig.background,
         elevation: 0,
         title: Text(monthLabel, style: TextStyle(color: themeConfig.textPrimary)),
-        leading: Padding(
-          padding: const EdgeInsets.all(6),
-          child: NeumorphicButton(
-            padding: const EdgeInsets.all(6),
-            onTap: calendar.goToPreviousMonth,
-            child: const Icon(Icons.chevron_left, size: 20),
-          ),
-        ),
+        // Previously in `leading:`, which AppBar forces into a fixed square
+        // slot (56px by default) — unlike `actions`, whose children just
+        // size to their own content. That made this button visibly bigger
+        // than its neighbors; keeping all 4 in `actions` sizes them alike.
+        automaticallyImplyLeading: false,
         actions: [
+          Padding(
+            padding: const EdgeInsets.all(6),
+            child: NeumorphicButton(
+              padding: const EdgeInsets.all(6),
+              onTap: calendar.goToPreviousMonth,
+              child: const Icon(Icons.chevron_left, size: 20),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(6),
             child: NeumorphicButton(
