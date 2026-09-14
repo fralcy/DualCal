@@ -63,6 +63,10 @@
   "importModeReplace": "Thay thế toàn bộ",
   "exportSuccess": "Đã xuất file thành công",
   "exportCancelled": "Đã huỷ xuất file",
+  "exportError": "Lỗi xuất file: {error}",
+  "@exportError": {
+    "placeholders": { "error": { "type": "String" } }
+  },
   "importSuccess": "Đã nhập {count} sự kiện",
   "@importSuccess": {
     "placeholders": { "count": { "type": "int" } }

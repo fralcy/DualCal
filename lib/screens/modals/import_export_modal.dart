@@ -132,6 +132,11 @@ class _ImportExportSheetState extends State<_ImportExportSheet> {
       final saved = await saveBackupFile(fileName, json);
       if (!mounted) return;
       _showSnackBar(saved != null ? l10n.exportSuccess : l10n.exportCancelled);
+    } catch (e) {
+      // Without this, a failure (e.g. a platform save API rejecting the
+      // request) surfaced as an uncaught async error with no visible
+      // feedback at all — the user just never saw anything happen.
+      if (mounted) _showSnackBar(l10n.exportError(e.toString()));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
