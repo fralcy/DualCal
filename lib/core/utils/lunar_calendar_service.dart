@@ -362,4 +362,56 @@ class LunarCalendarService {
       isLeapMonth: forLunar.isLeapMonth,
     );
   }
+
+  /// Finds up to [count] years (searching backward from [startYear]) in
+  /// which this lunar day/month/leap combination actually exists, paired
+  /// with its resolved solar date — used by the lunar→solar direction of
+  /// the date converter, where a lunar day/month repeats every year and the
+  /// caller wants "the most recent N years this fell on."
+  ///
+  /// May return fewer than [count] (including empty) if the search hits
+  /// [maxYearsToSearch] first — expected mainly when [isLeapMonth] is true
+  /// for a month that rarely or never falls as a leap month in the modern
+  /// calendar (leap months recur irregularly, so a specific month number
+  /// being the leap one can be many years apart, or effectively never).
+  List<LunarYearMatch> findRecentYearsFor(
+    int lunarDay,
+    int lunarMonth, {
+    bool isLeapMonth = false,
+    required int startYear,
+    int count = 3,
+    int maxYearsToSearch = 200,
+  }) {
+    final results = <LunarYearMatch>[];
+    var year = startYear;
+    var checked = 0;
+    while (results.length < count && checked < maxYearsToSearch) {
+      final validLeap = !isLeapMonth || isLeapMonthInYear(year, lunarMonth);
+      final daysInMonth =
+          daysInLunarMonth(year, lunarMonth, isLeapMonth: isLeapMonth);
+      if (validLeap && lunarDay <= daysInMonth) {
+        final solar = lunarToSolar(
+          lunarDay,
+          lunarMonth,
+          year,
+          isLeapMonth: isLeapMonth,
+        );
+        if (solar != null) {
+          results.add(LunarYearMatch(lunarYear: year, solarDate: solar));
+        }
+      }
+      year--;
+      checked++;
+    }
+    return results;
+  }
+}
+
+/// One "lunar day/month occurred in [lunarYear], landing on [solarDate]"
+/// match, as returned by [LunarCalendarService.findRecentYearsFor].
+class LunarYearMatch {
+  const LunarYearMatch({required this.lunarYear, required this.solarDate});
+
+  final int lunarYear;
+  final DateTime solarDate;
 }

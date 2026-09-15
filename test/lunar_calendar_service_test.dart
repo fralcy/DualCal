@@ -137,4 +137,67 @@ void main() {
     expect(occurrenceLunar.day, occurrenceLunar.day <= 30 ? occurrenceLunar.day : 30);
     expect(occurrenceLunar.day, daysInThatMonth < 30 ? daysInThatMonth : 30);
   });
+
+  group('findRecentYearsFor', () {
+    test('a normal (non-leap) day/month returns 3 consecutive years',
+        () {
+      final matches = service.findRecentYearsFor(
+        10,
+        3,
+        startYear: 2024,
+        count: 3,
+      );
+      expect(matches.map((m) => m.lunarYear), [2024, 2023, 2022]);
+      for (final m in matches) {
+        expect(m.solarDate, service.lunarToSolar(10, 3, m.lunarYear));
+      }
+    });
+
+    test('a leap-month request matches the year known to have that leap month',
+        () {
+      // 2023 has a leap 2nd lunar month (see the leap-month test above).
+      final matches = service.findRecentYearsFor(
+        10,
+        2,
+        isLeapMonth: true,
+        startYear: 2023,
+        count: 1,
+      );
+      expect(matches, hasLength(1));
+      expect(matches.single.lunarYear, 2023);
+      expect(
+        matches.single.solarDate,
+        service.lunarToSolar(10, 2, 2023, isLeapMonth: true),
+      );
+    });
+
+    test(
+        'returns fewer than count (possibly empty) once maxYearsToSearch is '
+        'exhausted, instead of looping forever', () {
+      // Lunar day 31 never exists (every lunar month has at most 30 days),
+      // so no year will ever match — this must terminate via the search
+      // cap rather than hang.
+      final matches = service.findRecentYearsFor(
+        31,
+        3,
+        startYear: 2024,
+        count: 3,
+        maxYearsToSearch: 5,
+      );
+      expect(matches, isEmpty);
+    });
+
+    test('an effectively-impossible leap month returns empty within a small search cap',
+        () {
+      final matches = service.findRecentYearsFor(
+        1,
+        1,
+        isLeapMonth: true,
+        startYear: 2024,
+        count: 1,
+        maxYearsToSearch: 1,
+      );
+      expect(matches, isEmpty);
+    });
+  });
 }
