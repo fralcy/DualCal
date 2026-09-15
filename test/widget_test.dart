@@ -170,4 +170,62 @@ void main() {
     }
     expect(cell.hasMoreEventColors, isTrue);
   });
+
+  testWidgets('tapping the month/year label jumps to a typed month/year',
+      (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(const ResponsiveCalendarScreen()));
+
+    final calendar = tester
+        .element(find.byType(ResponsiveCalendarScreen))
+        .read<CalendarProvider>();
+    final monthLabel =
+        '${calendar.visibleMonth.month}/${calendar.visibleMonth.year}';
+
+    await tester.tap(find.text(monthLabel));
+    await tester.pumpAndSettle();
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ResponsiveCalendarScreen)),
+    )!;
+    expect(find.text(l10n.jumpToMonthTitle), findsOneWidget);
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), '3');
+    await tester.enterText(fields.at(1), '2030');
+    await tester.tap(find.text(l10n.jumpToMonthGoButton));
+    await tester.pumpAndSettle();
+
+    expect(calendar.visibleMonth, DateTime(2030, 3));
+  });
+
+  testWidgets(
+      'the date converter modal shows the lunar equivalent for today, and '
+      'swapping switches to lunar input', (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(const ResponsiveCalendarScreen()));
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ResponsiveCalendarScreen)),
+    )!;
+
+    await tester.tap(find.byIcon(Icons.sync_alt));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.converterTitle), findsOneWidget);
+    // Default direction is solar-in / lunar-out: a single Can Chi result.
+    expect(find.text(l10n.dateTypeSolar), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.swap_horiz));
+    await tester.pumpAndSettle();
+
+    // After swapping, the lunar day/month dropdowns become the input side.
+    expect(find.text(l10n.dateTypeLunar), findsOneWidget);
+    expect(find.text(l10n.lunarDayLabel), findsOneWidget);
+    expect(find.text(l10n.leapMonthLabel), findsOneWidget);
+  });
 }

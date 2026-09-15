@@ -7,6 +7,8 @@ import '../core/widgets/day_detail_content.dart';
 import '../core/widgets/month_grid.dart';
 import '../core/widgets/neumorphic_button.dart';
 import '../core/widgets/neumorphic_container.dart';
+import 'modals/date_converter_modal.dart';
+import 'modals/jump_to_month_modal.dart';
 import 'modals/settings_modal.dart';
 
 /// Desktop layout: month grid on the left, a persistent side panel on the
@@ -27,7 +29,17 @@ class DesktopLandscapeCalendarScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: themeConfig.background,
         elevation: 0,
-        title: Text(monthLabel, style: TextStyle(color: themeConfig.textPrimary)),
+        title: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => showJumpToMonthModal(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Text(
+              monthLabel,
+              style: TextStyle(color: themeConfig.textPrimary),
+            ),
+          ),
+        ),
         // Previously in `leading:`, which AppBar forces into a fixed square
         // slot (56px by default) — unlike `actions`, whose children just
         // size to their own content. That made this button visibly bigger
@@ -56,6 +68,14 @@ class DesktopLandscapeCalendarScreen extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               onTap: calendar.goToToday,
               child: const Icon(Icons.today, size: 20),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(6),
+            child: NeumorphicButton(
+              padding: const EdgeInsets.all(6),
+              onTap: () => showDateConverterModal(context),
+              child: const Icon(Icons.sync_alt, size: 20),
             ),
           ),
           Padding(

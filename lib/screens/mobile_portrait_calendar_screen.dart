@@ -6,7 +6,9 @@ import '../core/providers/settings_provider.dart';
 import '../core/widgets/month_grid.dart';
 import '../core/widgets/neumorphic_button.dart';
 import '../core/widgets/neumorphic_container.dart';
+import 'modals/date_converter_modal.dart';
 import 'modals/day_detail_modal.dart';
+import 'modals/jump_to_month_modal.dart';
 import 'modals/settings_modal.dart';
 
 /// Mobile layout: month grid fills the screen, tapping a day opens the
@@ -26,7 +28,17 @@ class MobilePortraitCalendarScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: themeConfig.background,
         elevation: 0,
-        title: Text(monthLabel, style: TextStyle(color: themeConfig.textPrimary)),
+        title: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => showJumpToMonthModal(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Text(
+              monthLabel,
+              style: TextStyle(color: themeConfig.textPrimary),
+            ),
+          ),
+        ),
         // Previously in `leading:`, which AppBar forces into a fixed square
         // slot (56px by default) — unlike `actions`, whose children just
         // size to their own content. That made this button visibly bigger
@@ -61,6 +73,14 @@ class MobilePortraitCalendarScreen extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             child: NeumorphicButton(
               padding: const EdgeInsets.all(6),
+              onTap: () => showDateConverterModal(context),
+              child: const Icon(Icons.sync_alt, size: 20),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(6),
+            child: NeumorphicButton(
+              padding: const EdgeInsets.all(6),
               onTap: () => showSettingsModal(context),
               child: const Icon(Icons.palette_outlined, size: 20),
             ),
@@ -69,13 +89,23 @@ class MobilePortraitCalendarScreen extends StatelessWidget {
       ),
       body: GestureDetector(
         // Swipe left/right to change month — the touch-screen equivalent
-        // of the Page Up/Down keyboard shortcut.
+        // of the Page Up/Down keyboard shortcut. Swipe up/down to change
+        // year — the equivalent of Shift+Page Up/Page Down.
         onHorizontalDragEnd: (details) {
           final velocity = details.primaryVelocity ?? 0;
           if (velocity < -200) {
             calendar.goToNextMonth();
           } else if (velocity > 200) {
             calendar.goToPreviousMonth();
+          }
+        },
+        onVerticalDragEnd: (details) {
+          final velocity = details.primaryVelocity ?? 0;
+          final current = calendar.visibleMonth;
+          if (velocity < -200) {
+            calendar.jumpToMonth(current.year + 1, current.month);
+          } else if (velocity > 200) {
+            calendar.jumpToMonth(current.year - 1, current.month);
           }
         },
         child: Padding(
