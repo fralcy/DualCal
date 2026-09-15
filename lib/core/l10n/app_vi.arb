@@ -54,6 +54,15 @@
   "shortcutsShowHelp": "Mở bảng phím tắt này",
   "shortcutsCloseModal": "Đóng hộp thoại/menu đang mở",
 
+  "jumpToMonthTitle": "Đi đến tháng",
+  "jumpToMonthGoButton": "Đi tới",
+
+  "converterTitle": "Đổi lịch Âm - Dương",
+  "converterResultLabel": "Kết quả",
+  "converterSwapTooltip": "Đổi chiều nhập/kết quả",
+  "converterNoResult": "Không tìm thấy năm phù hợp",
+  "converterLoadMoreYears": "Tải thêm năm trước",
+
   "themeSettingsTitle": "Giao diện",
   "languageSettingsTitle": "Ngôn ngữ",
   "backupSettingsTitle": "Sao lưu & phục hồi",

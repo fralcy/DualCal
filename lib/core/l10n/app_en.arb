@@ -48,6 +48,15 @@
   "shortcutsShowHelp": "Open this shortcuts sheet",
   "shortcutsCloseModal": "Close the open dialog/sheet",
 
+  "jumpToMonthTitle": "Go to month",
+  "jumpToMonthGoButton": "Go",
+
+  "converterTitle": "Lunar - Solar converter",
+  "converterResultLabel": "Result",
+  "converterSwapTooltip": "Swap input/result",
+  "converterNoResult": "No matching year found",
+  "converterLoadMoreYears": "Load earlier years",
+
   "themeSettingsTitle": "Theme",
   "languageSettingsTitle": "Language",
   "backupSettingsTitle": "Backup & restore",
