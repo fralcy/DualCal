@@ -75,6 +75,17 @@ class CalendarProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Jumps straight to any month/year (e.g. from a typed "go to month"
+  /// dialog, or a vertical swipe/Shift+PageUp/PageDown year change) instead
+  /// of stepping one month at a time via [goToNextMonth]/[goToPreviousMonth].
+  void jumpToMonth(int year, int month) {
+    final target = DateTime(year, month);
+    _lastMonthDelta = _monthDelta(_visibleMonth, target);
+    _visibleMonth = target;
+    _selectedDate = _clampSelectedDateToVisibleMonth();
+    notifyListeners();
+  }
+
   /// Sign of the month difference between [from] and [to] (-1, 0, or +1).
   int _monthDelta(DateTime from, DateTime to) {
     final diff = (to.year - from.year) * 12 + (to.month - from.month);

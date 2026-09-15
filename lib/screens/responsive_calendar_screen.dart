@@ -101,9 +101,7 @@ class ResponsiveCalendarScreen extends StatelessWidget {
             onInvoke: (intent) {
               final calendar = context.read<CalendarProvider>();
               final current = calendar.visibleMonth;
-              calendar.selectDate(
-                DateTime(current.year + intent.years, current.month, 1),
-              );
+              calendar.jumpToMonth(current.year + intent.years, current.month);
               return null;
             },
           ),
