@@ -59,9 +59,17 @@ async function precacheCanvasKit(cache) {
     // requesting the plain "full" variant instead still gets it cached via
     // the fetch handler below, just starting from its second visit.
     const base = 'https://www.gstatic.com/flutter-canvaskit/' + match[1] + '/chromium/';
+    // Plain fetch, not { mode: 'no-cors' }: Flutter loads canvaskit.js via
+    // a dynamic import(), which *requires* a proper CORS-readable
+    // response — an opaque (no-cors) one can't be used as a module source
+    // and makes the import fail outright. Google's CDN already sends
+    // proper CORS headers here (this import already had to work before
+    // any service worker existed), so a normal fetch gets a normal,
+    // cacheable response — forcing no-cors was actively harmful, not just
+    // unnecessary.
     await Promise.allSettled(
       ['canvaskit.js', 'canvaskit.wasm'].map((name) =>
-        fetch(base + name, { mode: 'no-cors' }).then((response) => cache.put(base + name, response)),
+        fetch(base + name).then((response) => cache.put(base + name, response)),
       ),
     );
   } catch (err) {
@@ -107,7 +115,16 @@ function isEntrypointRequest(request, url) {
 
 async function networkFirst(request) {
   try {
-    const response = await fetch(request, { cache: 'no-store' });
+    // Fetching request.url (a string) rather than `request` itself: a
+    // navigation's Request has mode 'navigate', and passing ANY second
+    // argument to fetch() alongside an existing Request forces the browser
+    // to reconstruct it via `new Request(request, init)` — which throws
+    // for mode 'navigate' ("Cannot construct a Request with a RequestInit
+    // whose mode member is set as 'navigate'"). That was breaking every
+    // single page load, network or not, since this exact path runs for
+    // every navigation. Using the URL string sidesteps the restriction
+    // entirely.
+    const response = await fetch(request.url, { cache: 'no-store' });
     const cache = await caches.open(CACHE_NAME);
     cache.put(request, response.clone());
     return response;
@@ -118,15 +135,20 @@ async function networkFirst(request) {
   }
 }
 
-async function cacheFirst(request, url) {
+async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
 
-  const isCrossOrigin = url.origin !== self.location.origin;
-  // Cross-origin (the CanvasKit CDN) responses without CORS headers can
-  // still be cached as "opaque" via a no-cors fetch — the browser can run
-  // the script/wasm from it later even though JS can't inspect the body.
-  const response = await fetch(request, isCrossOrigin ? { mode: 'no-cors' } : {});
+  // Plain fetch (no forced no-cors) — see precacheCanvasKit's comment on
+  // why forcing an opaque response is actively harmful for anything that
+  // ends up loaded as a script/module, not just pointless for anything
+  // that already supports CORS. request.url (a string), not `request`
+  // itself, avoids a class of bug where the original request's mode
+  // (e.g. 'navigate') can't be carried into a reconstructed Request —
+  // this function shouldn't see navigate requests (isEntrypointRequest
+  // routes those to networkFirst first), but staying consistent avoids
+  // re-introducing that bug later.
+  const response = await fetch(request.url);
   const cache = await caches.open(CACHE_NAME);
   cache.put(request, response.clone());
   return response;
@@ -144,6 +166,6 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    cacheFirst(request, url).catch(() => caches.match(request)),
+    cacheFirst(request).catch(() => caches.match(request)),
   );
 });
