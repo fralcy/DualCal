@@ -6,6 +6,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/models/lunar_date.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/utils/lunar_calendar_service.dart';
+import '../../core/widgets/lunar_number_field.dart';
 import '../../core/widgets/neumorphic_button.dart';
 import '../../core/widgets/neumorphic_container.dart';
 import '../responsive_screen.dart';
@@ -34,7 +35,30 @@ Future<void> showDateConverterModal(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => const _ConverterSheet(),
+    builder: (context) {
+      final media = MediaQuery.of(context);
+      return Padding(
+        // Grows the sheet by the keyboard's height so the content
+        // *requires* more room than fits on screen once the keyboard is
+        // up — that's what makes the SingleChildScrollView inside
+        // actually have something to scroll, letting a focused field
+        // (like Can Chi) move above the keyboard instead of staying
+        // hidden behind it.
+        padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+        child: ConstrainedBox(
+          // Caps the sheet itself at a bit less than full screen height —
+          // without this, a short sheet (few fields, no keyboard yet)
+          // only ever renders as tall as its content, so the *scrollable
+          // viewport* stays that same small size even after the padding
+          // above asks for more room, leaving too little space to
+          // actually scroll the focused field into view. Capping it
+          // instead of letting it hug its content guarantees a real,
+          // fixed-size scrollable viewport to work with.
+          constraints: BoxConstraints(maxHeight: media.size.height * 0.9),
+          child: const _ConverterSheet(),
+        ),
+      );
+    },
   );
 }
 
@@ -228,28 +252,24 @@ class _ConverterSheetState extends State<_ConverterSheet> {
       children: [
         Text(l10n.dateTypeLunar, style: TextStyle(color: t.textSecondary)),
         const SizedBox(height: 8),
-        DropdownButtonFormField<int>(
-          initialValue: _lunarDay,
-          decoration: InputDecoration(labelText: l10n.lunarDayLabel),
-          items: List.generate(
-            30,
-            (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
-          ),
+        LunarNumberField(
+          label: l10n.lunarDayLabel,
+          value: _lunarDay,
+          min: 1,
+          max: 30,
           onChanged: (v) => setState(() {
-            _lunarDay = v ?? _lunarDay;
+            _lunarDay = v;
             _resetLunarSearch();
           }),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<int>(
-          initialValue: _lunarMonth,
-          decoration: InputDecoration(labelText: l10n.lunarMonthLabel),
-          items: List.generate(
-            12,
-            (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
-          ),
+        LunarNumberField(
+          label: l10n.lunarMonthLabel,
+          value: _lunarMonth,
+          min: 1,
+          max: 12,
           onChanged: (v) => setState(() {
-            _lunarMonth = v ?? _lunarMonth;
+            _lunarMonth = v;
             _resetLunarSearch();
           }),
         ),

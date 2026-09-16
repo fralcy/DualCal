@@ -7,6 +7,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/models/lunar_date.dart';
 import '../../core/providers/event_provider.dart';
 import '../../core/utils/lunar_calendar_service.dart';
+import '../../core/widgets/lunar_number_field.dart';
 import '../../models/calendar_event.dart';
 import '../responsive_screen.dart';
 
@@ -44,10 +45,22 @@ Future<void> showEventEditorModal(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: form,
-    ),
+    // The bottom padding gives the sheet a reason to grow when the
+    // keyboard appears; the height cap guarantees a real scrollable
+    // viewport (rather than one that just hugs the form's natural height)
+    // so a focused field can actually scroll into view above the
+    // keyboard instead of staying hidden behind it. See
+    // date_converter_modal.dart for the same pattern.
+    builder: (context) {
+      final media = MediaQuery.of(context);
+      return Padding(
+        padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: media.size.height * 0.9),
+          child: form,
+        ),
+      );
+    },
   );
 }
 
@@ -96,8 +109,10 @@ class _EventEditorFormState extends State<_EventEditorForm> {
     _isLeapMonth = e?.isLeapMonth ?? false;
     _recurrence = e?.recurrence ?? EventRecurrence.none;
     _reminderDaysBefore = List<int>.from(e?.reminderDaysBefore ?? const [1]);
-    _reminderTime =
-        TimeOfDay(hour: e?.reminderHour ?? 8, minute: e?.reminderMinute ?? 0);
+    _reminderTime = TimeOfDay(
+      hour: e?.reminderHour ?? 8,
+      minute: e?.reminderMinute ?? 0,
+    );
     _colorTag = e?.colorTag ?? 0;
   }
 
@@ -131,8 +146,9 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                 TextFormField(
                   controller: _titleController,
                   decoration: InputDecoration(labelText: l10n.titleLabel),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l10n.titleRequired : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l10n.titleRequired
+                      : null,
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
@@ -215,13 +231,19 @@ class _EventEditorFormState extends State<_EventEditorForm> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(l10n.reminderDaysBeforeLabel, style: theme.textTheme.labelLarge),
+                Text(
+                  l10n.reminderDaysBeforeLabel,
+                  style: theme.textTheme.labelLarge,
+                ),
                 const SizedBox(height: 8),
                 _buildReminderChips(context, l10n),
                 const SizedBox(height: 12),
                 _buildReminderTimePicker(context, l10n),
                 const SizedBox(height: 16),
-                Text(l10n.categoryColorLabel, style: theme.textTheme.labelLarge),
+                Text(
+                  l10n.categoryColorLabel,
+                  style: theme.textTheme.labelLarge,
+                ),
                 const SizedBox(height: 8),
                 _buildColorPicker(context),
                 const SizedBox(height: 24),
@@ -280,27 +302,23 @@ class _EventEditorFormState extends State<_EventEditorForm> {
         Row(
           children: [
             Expanded(
-              child: DropdownButtonFormField<int>(
-                initialValue: clampedDay,
-                decoration: InputDecoration(labelText: l10n.lunarDayLabel),
-                items: List.generate(
-                  daysInMonth,
-                  (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
-                ),
-                onChanged: (v) => setState(() => _lunarDay = v ?? _lunarDay),
+              child: LunarNumberField(
+                label: l10n.lunarDayLabel,
+                value: clampedDay,
+                min: 1,
+                max: daysInMonth,
+                onChanged: (v) => setState(() => _lunarDay = v),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: DropdownButtonFormField<int>(
-                initialValue: _lunarMonth,
-                decoration: InputDecoration(labelText: l10n.lunarMonthLabel),
-                items: List.generate(
-                  12,
-                  (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')),
-                ),
+              child: LunarNumberField(
+                label: l10n.lunarMonthLabel,
+                value: _lunarMonth,
+                min: 1,
+                max: 12,
                 onChanged: (v) => setState(() {
-                  _lunarMonth = v ?? _lunarMonth;
+                  _lunarMonth = v;
                   _isLeapMonth = false;
                 }),
               ),
@@ -366,7 +384,10 @@ class _EventEditorFormState extends State<_EventEditorForm> {
             child: TextField(
               controller: _reminderInputController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(hintText: l10n.addReminderHint, isDense: true),
+              decoration: InputDecoration(
+                hintText: l10n.addReminderHint,
+                isDense: true,
+              ),
               onSubmitted: _addReminderDay,
             ),
           ),
@@ -421,8 +442,9 @@ class _EventEditorFormState extends State<_EventEditorForm> {
     if (!_formKey.currentState!.validate()) return;
     final provider = context.read<EventProvider>();
     final title = _titleController.text.trim();
-    final description =
-        _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim();
+    final description = _descriptionController.text.trim().isEmpty
+        ? null
+        : _descriptionController.text.trim();
 
     if (widget.existing == null) {
       await provider.addEvent(

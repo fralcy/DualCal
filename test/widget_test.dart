@@ -244,7 +244,9 @@ void main() {
 
     // Typing the exact Can Chi name resolves it without needing to tap a
     // suggestion from the Autocomplete overlay.
-    await tester.enterText(find.byType(TextFormField), 'Giáp Thìn');
+    // Day/month are now also plain TextFormFields (LunarNumberField), so
+    // the Can Chi field is no longer the only match — it's the last one.
+    await tester.enterText(find.byType(TextFormField).last, 'Giáp Thìn');
     await tester.pumpAndSettle();
 
     // Result rows are formatted as "<year> (Giáp Thìn)" — matching that
