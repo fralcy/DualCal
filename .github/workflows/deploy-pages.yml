@@ -31,7 +31,15 @@ jobs:
 
       - run: dart run build_runner build --delete-conflicting-outputs
 
-      - run: flutter build web --release --base-href /DualCal/
+      # --pwa-strategy=none disables Flutter's own generated service
+      # worker (it never actually cached anything — see
+      # web/dualcal_service_worker.js for the real offline caching), so
+      # only our own service worker controls the page. The flag itself is
+      # deprecated upstream (flutter/flutter#156910) and may need
+      # replacing on a future Flutter upgrade; if it's ever removed,
+      # Flutter's default is expected to be "register nothing" anyway,
+      # matching what we want here.
+      - run: flutter build web --release --base-href /DualCal/ --pwa-strategy=none
 
       - uses: actions/configure-pages@v5
 
