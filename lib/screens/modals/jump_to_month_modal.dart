@@ -32,7 +32,22 @@ Future<void> showJumpToMonthModal(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => const _JumpToMonthSheet(),
+    // See the identical pattern (and its comments) in
+    // date_converter_modal.dart: the bottom padding gives the sheet a
+    // reason to grow when the keyboard appears, and the height cap
+    // guarantees a real scrollable viewport to scroll a focused field
+    // into above the keyboard, instead of a short sheet with nowhere to
+    // scroll.
+    builder: (context) {
+      final media = MediaQuery.of(context);
+      return Padding(
+        padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: media.size.height * 0.9),
+          child: const _JumpToMonthSheet(),
+        ),
+      );
+    },
   );
 }
 
@@ -82,73 +97,78 @@ class _JumpToMonthSheetState extends State<_JumpToMonthSheet> {
         child: NeumorphicContainer(
           padding: const EdgeInsets.all(20),
           borderRadius: 24,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.jumpToMonthTitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: t.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _monthController,
-                        decoration: InputDecoration(
-                          labelText: l10n.lunarMonthLabel,
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (v) {
-                          final month = int.tryParse(v ?? '');
-                          return (month == null || month < 1 || month > 12)
-                              ? ''
-                              : null;
-                        },
-                        onFieldSubmitted: (_) => _go(l10n),
-                      ),
+          // A scrollable wrapper so this can't overflow if the on-screen
+          // keyboard ever leaves less room than the form needs — matches
+          // date_converter_modal.dart's structure.
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.jumpToMonthTitle,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: t.textPrimary,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _yearController,
-                        decoration: InputDecoration(
-                          labelText: l10n.lunarYearLabel,
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (v) {
-                          final year = int.tryParse(v ?? '');
-                          return (year == null || year < 1900 || year > 2200)
-                              ? ''
-                              : null;
-                        },
-                        onFieldSubmitted: (_) => _go(l10n),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: NeumorphicButton(
-                    onTap: () => _go(l10n),
-                    child: Text(l10n.jumpToMonthGoButton),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _monthController,
+                          decoration: InputDecoration(
+                            labelText: l10n.lunarMonthLabel,
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (v) {
+                            final month = int.tryParse(v ?? '');
+                            return (month == null || month < 1 || month > 12)
+                                ? ''
+                                : null;
+                          },
+                          onFieldSubmitted: (_) => _go(l10n),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _yearController,
+                          decoration: InputDecoration(
+                            labelText: l10n.lunarYearLabel,
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (v) {
+                            final year = int.tryParse(v ?? '');
+                            return (year == null || year < 1900 || year > 2200)
+                                ? ''
+                                : null;
+                          },
+                          onFieldSubmitted: (_) => _go(l10n),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: NeumorphicButton(
+                      onTap: () => _go(l10n),
+                      child: Text(l10n.jumpToMonthGoButton),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
