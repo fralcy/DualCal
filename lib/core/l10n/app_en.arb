@@ -56,6 +56,7 @@
   "converterSwapTooltip": "Swap input/result",
   "converterNoResult": "No matching year found",
   "converterLoadMoreYears": "Load earlier years",
+  "converterCanChiLabel": "Can Chi (optional)",
 
   "themeSettingsTitle": "Theme",
   "languageSettingsTitle": "Language",

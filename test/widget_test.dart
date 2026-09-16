@@ -228,4 +228,42 @@ void main() {
     expect(find.text(l10n.lunarDayLabel), findsOneWidget);
     expect(find.text(l10n.leapMonthLabel), findsOneWidget);
   });
+
+  testWidgets(
+      'picking a Can Chi in the converter constrains results to years 60 '
+      'years apart, all sharing that Can Chi', (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(const ResponsiveCalendarScreen()));
+
+    await tester.tap(find.byIcon(Icons.sync_alt));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.swap_horiz));
+    await tester.pumpAndSettle();
+
+    // Typing the exact Can Chi name resolves it without needing to tap a
+    // suggestion from the Autocomplete overlay.
+    await tester.enterText(find.byType(TextFormField), 'Giáp Thìn');
+    await tester.pumpAndSettle();
+
+    // Result rows are formatted as "<year> (Giáp Thìn)" — matching that
+    // shape specifically (rather than any text containing "Giáp Thìn")
+    // excludes the Autocomplete suggestion overlay, which renders the bare
+    // name "Giáp Thìn" with no year at all.
+    final rowPattern = RegExp(r'^(\d+) \(Giáp Thìn\)$');
+    final years = tester
+        .widgetList<Text>(
+          find.byWidgetPredicate(
+            (w) => w is Text && rowPattern.hasMatch(w.data ?? ''),
+          ),
+        )
+        .map((t) => int.parse(rowPattern.firstMatch(t.data!)!.group(1)!))
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+    expect(years.length, greaterThanOrEqualTo(2));
+    for (var i = 1; i < years.length; i++) {
+      expect(years[i - 1] - years[i], 60);
+    }
+  });
 }

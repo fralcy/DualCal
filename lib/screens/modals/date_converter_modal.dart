@@ -56,6 +56,11 @@ class _ConverterSheetState extends State<_ConverterSheet> {
   int _lunarMonth = 1;
   bool _isLeapInput = false;
 
+  /// Position in the 60-year Can Chi cycle (0-59), picked via the
+  /// autocomplete field — null means "not specified", falling back to the
+  /// plain "most recent years" search regardless of Can Chi.
+  int? _canChiIndex;
+
   List<LunarYearMatch> _matches = const [];
   int? _nextSearchYear;
 
@@ -65,44 +70,66 @@ class _ConverterSheetState extends State<_ConverterSheet> {
     _resetLunarSearch();
   }
 
+  /// One search step, dispatching to whichever method matches whether a
+  /// Can Chi filter is active — candidate years step by 1 without it, by
+  /// 60 (Can Chi always repeats on a 60-year cycle) with it.
+  List<LunarYearMatch> _search(int startYear) {
+    final canChiIndex = _canChiIndex;
+    if (canChiIndex != null) {
+      return _lunarService.findRecentYearsForCanChi(
+        _lunarDay,
+        _lunarMonth,
+        canChiIndex,
+        isLeapMonth: _isLeapInput,
+        startYear: startYear,
+      );
+    }
+    return _lunarService.findRecentYearsFor(
+      _lunarDay,
+      _lunarMonth,
+      isLeapMonth: _isLeapInput,
+      startYear: startYear,
+    );
+  }
+
   /// Re-runs the lunar->solar search from the current year, replacing any
-  /// existing results — called whenever the lunar input (day/month/leap) or
-  /// the swap direction changes. Not wrapped in `setState` itself since it
-  /// also needs to run once from `initState`, before the first build.
+  /// existing results — called whenever the lunar input (day/month/leap/Can
+  /// Chi) or the swap direction changes. Not wrapped in `setState` itself
+  /// since it also needs to run once from `initState`, before the first
+  /// build.
   void _resetLunarSearch() {
     if (!_inputIsLunar) {
       _matches = const [];
       _nextSearchYear = null;
       return;
     }
-    final matches = _lunarService.findRecentYearsFor(
-      _lunarDay,
-      _lunarMonth,
-      isLeapMonth: _isLeapInput,
-      startYear: DateTime.now().year,
-    );
+    final matches = _search(DateTime.now().year);
     _matches = matches;
-    _nextSearchYear = matches.isEmpty ? null : matches.last.lunarYear - 1;
+    _nextSearchYear = matches.isEmpty
+        ? null
+        : matches.last.lunarYear - (_canChiIndex != null ? 60 : 1);
   }
 
   void _loadMoreYears() {
     final startYear = _nextSearchYear;
     if (startYear == null) return;
-    final more = _lunarService.findRecentYearsFor(
-      _lunarDay,
-      _lunarMonth,
-      isLeapMonth: _isLeapInput,
-      startYear: startYear,
-    );
+    final more = _search(startYear);
     setState(() {
       _matches = [..._matches, ...more];
-      _nextSearchYear = more.isEmpty ? null : more.last.lunarYear - 1;
+      _nextSearchYear = more.isEmpty
+          ? null
+          : more.last.lunarYear - (_canChiIndex != null ? 60 : 1);
     });
   }
 
   void _swap() {
     setState(() {
       _inputIsLunar = !_inputIsLunar;
+      // Reset rather than carry over: the Can Chi text field itself always
+      // starts empty again after a swap (it's rebuilt fresh), so leaving
+      // the old index set would silently keep filtering by a Can Chi the
+      // field no longer visibly shows.
+      _canChiIndex = null;
       _resetLunarSearch();
     });
   }
@@ -142,7 +169,7 @@ class _ConverterSheetState extends State<_ConverterSheet> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildInputColumn(l10n, t)),
+                    Expanded(child: _buildInputColumn(l10n, t, isVietnamese)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Tooltip(
@@ -165,7 +192,11 @@ class _ConverterSheetState extends State<_ConverterSheet> {
     );
   }
 
-  Widget _buildInputColumn(AppLocalizations l10n, NeumorphicThemeConfig t) {
+  Widget _buildInputColumn(
+    AppLocalizations l10n,
+    NeumorphicThemeConfig t,
+    bool isVietnamese,
+  ) {
     if (!_inputIsLunar) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,6 +260,16 @@ class _ConverterSheetState extends State<_ConverterSheet> {
           title: Text(l10n.leapMonthLabel),
           onChanged: (v) => setState(() {
             _isLeapInput = v ?? false;
+            _resetLunarSearch();
+          }),
+        ),
+        const SizedBox(height: 8),
+        _CanChiField(
+          key: ValueKey(isVietnamese),
+          label: l10n.converterCanChiLabel,
+          options: isVietnamese ? allCanChiNamesVi : allCanChiNamesEnglish,
+          onChanged: (index) => setState(() {
+            _canChiIndex = index;
             _resetLunarSearch();
           }),
         ),
@@ -308,6 +349,58 @@ class _ConverterSheetState extends State<_ConverterSheet> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Autocomplete for picking one of the 60 Can Chi names — narrows the
+/// lunar->solar search from "the N most recent years with this lunar
+/// day/month" (which could easily NOT be the year someone actually means)
+/// to "the N most recent years with this lunar day/month *and* this exact
+/// Can Chi", useful when someone knows e.g. "mùng 10 tháng 3 năm Giáp
+/// Thìn" but not which specific year that was. Left blank, the search
+/// falls back to ignoring Can Chi entirely.
+class _CanChiField extends StatelessWidget {
+  const _CanChiField({
+    super.key,
+    required this.label,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String label;
+  final List<String> options;
+
+  /// Called with the selected name's index into [options], or null once
+  /// the field is cleared / no longer matches a valid name exactly.
+  final ValueChanged<int?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Autocomplete<String>(
+      optionsBuilder: (value) {
+        if (value.text.isEmpty) return const Iterable<String>.empty();
+        final query = value.text.toLowerCase();
+        return options.where((o) => o.toLowerCase().contains(query));
+      },
+      onSelected: (selection) => onChanged(options.indexOf(selection)),
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        return TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          decoration: InputDecoration(labelText: label),
+          onChanged: (text) {
+            if (text.isEmpty) {
+              onChanged(null);
+              return;
+            }
+            final exactIndex = options.indexWhere(
+              (o) => o.toLowerCase() == text.toLowerCase(),
+            );
+            if (exactIndex != -1) onChanged(exactIndex);
+          },
+        );
+      },
     );
   }
 }

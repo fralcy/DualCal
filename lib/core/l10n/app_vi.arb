@@ -62,6 +62,7 @@
   "converterSwapTooltip": "Đổi chiều nhập/kết quả",
   "converterNoResult": "Không tìm thấy năm phù hợp",
   "converterLoadMoreYears": "Tải thêm năm trước",
+  "converterCanChiLabel": "Can Chi (tuỳ chọn)",
 
   "themeSettingsTitle": "Giao diện",
   "languageSettingsTitle": "Ngôn ngữ",
