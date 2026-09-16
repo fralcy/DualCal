@@ -85,5 +85,26 @@
         });
     })();
   </script>
+
+  <!--
+    Registers our own service worker so the app works offline after the
+    first visit. Flutter's own generated one is disabled at build time
+    (--pwa-strategy=none in the deploy workflow) — it never actually cached
+    anything anyway (it only self-unregisters and force-reloads open
+    tabs), so registering it alongside ours would just race for control of
+    the same scope. See web/dualcal_service_worker.js for the caching
+    strategy itself.
+  -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        var swUrl = new URL('dualcal_service_worker.js', document.baseURI).toString();
+        navigator.serviceWorker.register(swUrl).catch(function () {
+          // Unsupported/blocked (e.g. private browsing) — the app still
+          // works online, it just won't work offline.
+        });
+      });
+    }
+  </script>
 </body>
 </html>
