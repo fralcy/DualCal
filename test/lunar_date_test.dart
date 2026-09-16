@@ -51,4 +51,29 @@ void main() {
     const date = LunarDate(day: 10, month: 3, year: 2024);
     expect(date.canChiEnglish, 'Wood Dragon');
   });
+
+  test('allCanChiNamesVi has all 60 distinct names, in cycle order', () {
+    expect(allCanChiNamesVi, hasLength(60));
+    expect(allCanChiNamesVi.toSet(), hasLength(60));
+    expect(allCanChiNamesVi[0], 'Giáp Tý');
+    expect(allCanChiNamesVi.indexOf('Giáp Thìn'), 40);
+  });
+
+  test('allCanChiNamesEnglish matches allCanChiNamesVi position-for-position',
+      () {
+    expect(allCanChiNamesEnglish, hasLength(60));
+    expect(allCanChiNamesEnglish[0], 'Wood Rat');
+    expect(allCanChiNamesEnglish[40], 'Wood Dragon');
+  });
+
+  test('canChiCycleIndex agrees with allCanChiNamesVi for known years', () {
+    expect(canChiCycleIndex(1984), 0);
+    expect(canChiCycleIndex(2024), 40);
+    expect(allCanChiNamesVi[canChiCycleIndex(2024)], canChiForYear(2024));
+  });
+
+  test('canChiCycleIndex is stable across a 60-year cycle', () {
+    expect(canChiCycleIndex(2024), canChiCycleIndex(2024 - 60));
+    expect(canChiCycleIndex(2024), canChiCycleIndex(2024 + 60));
+  });
 }

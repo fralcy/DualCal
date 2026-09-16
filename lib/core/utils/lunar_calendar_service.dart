@@ -405,6 +405,51 @@ class LunarCalendarService {
     }
     return results;
   }
+
+  /// Like [findRecentYearsFor], but constrained to years whose Can Chi
+  /// cycle position is exactly [canChiCycleIndex] (see
+  /// `core/models/lunar_date.dart`'s `canChiCycleIndex`/`allCanChiNamesVi`)
+  /// — i.e. candidate years are always a multiple of 60 apart, rather than
+  /// consecutive. Useful when someone knows a lunar day/month and the Can
+  /// Chi name of the year (e.g. "mùng 10 tháng 3 năm Giáp Thìn") but not
+  /// which of the many actual years with that name it was.
+  List<LunarYearMatch> findRecentYearsForCanChi(
+    int lunarDay,
+    int lunarMonth,
+    int canChiCycleIndex, {
+    bool isLeapMonth = false,
+    required int startYear,
+    int count = 3,
+    int maxCyclesToSearch = 40,
+  }) {
+    final startIndex = _mod(startYear - 4, 60);
+    final backToNearestMatch = _mod(startIndex - canChiCycleIndex, 60);
+    var year = startYear - backToNearestMatch;
+
+    final results = <LunarYearMatch>[];
+    var checked = 0;
+    while (results.length < count && checked < maxCyclesToSearch) {
+      final validLeap = !isLeapMonth || isLeapMonthInYear(year, lunarMonth);
+      final daysInMonth =
+          daysInLunarMonth(year, lunarMonth, isLeapMonth: isLeapMonth);
+      if (validLeap && lunarDay <= daysInMonth) {
+        final solar = lunarToSolar(
+          lunarDay,
+          lunarMonth,
+          year,
+          isLeapMonth: isLeapMonth,
+        );
+        if (solar != null) {
+          results.add(LunarYearMatch(lunarYear: year, solarDate: solar));
+        }
+      }
+      year -= 60;
+      checked++;
+    }
+    return results;
+  }
+
+  static int _mod(int a, int b) => ((a % b) + b) % b;
 }
 
 /// One "lunar day/month occurred in [lunarYear], landing on [solarDate]"

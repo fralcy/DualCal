@@ -200,4 +200,48 @@ void main() {
       expect(matches, isEmpty);
     });
   });
+
+  group('findRecentYearsForCanChi', () {
+    test('finds years exactly 60 years apart matching the given cycle index',
+        () {
+      // 2024 is Giáp Thìn, cycle index 40 (verified via canChiCycleIndex).
+      final matches = service.findRecentYearsForCanChi(
+        10,
+        3,
+        40,
+        startYear: 2024,
+        count: 3,
+      );
+      expect(matches.map((m) => m.lunarYear), [2024, 1964, 1904]);
+      for (final m in matches) {
+        expect(m.solarDate, service.lunarToSolar(10, 3, m.lunarYear));
+      }
+    });
+
+    test('starts from the nearest matching year at or before startYear, '
+        'even when startYear itself does not match', () {
+      // 2023's cycle index is 39, one behind 2024's 40 — searching from
+      // 2023 for index 40 should land on 1964 (2024 is *after* startYear).
+      final matches = service.findRecentYearsForCanChi(
+        10,
+        3,
+        40,
+        startYear: 2023,
+        count: 1,
+      );
+      expect(matches.single.lunarYear, 1964);
+    });
+
+    test('returns fewer than count once maxCyclesToSearch is exhausted', () {
+      final matches = service.findRecentYearsForCanChi(
+        31, // never a valid lunar day
+        3,
+        40,
+        startYear: 2024,
+        count: 3,
+        maxCyclesToSearch: 2,
+      );
+      expect(matches, isEmpty);
+    });
+  });
 }

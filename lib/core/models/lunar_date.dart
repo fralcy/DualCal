@@ -62,6 +62,22 @@ const _branchAnimalsEn = [
 
 int _mod(int a, int b) => ((a % b) + b) % b;
 
+/// The 60 Can Chi names in cycle order (index 0 = "Giáp Tý"), Vietnamese —
+/// lets a UI offer every valid Can Chi as a fixed, enumerable choice (e.g.
+/// an autocomplete) instead of only ever deriving one from an already-known
+/// year.
+final List<String> allCanChiNamesVi = List.generate(60, (k) => canChiForYear(4 + k));
+
+/// English rendering of [allCanChiNamesVi] (see [canChiEnglishForYear]).
+final List<String> allCanChiNamesEnglish =
+    List.generate(60, (k) => canChiEnglishForYear(4 + k));
+
+/// A year's position in the 60-year Can Chi cycle (0-59) — the inverse of
+/// picking a name out of [allCanChiNamesVi]/[allCanChiNamesEnglish]: two
+/// years with the same [canChiCycleIndex] always share the same Can Chi
+/// name, and always differ by a multiple of 60 years.
+int canChiCycleIndex(int year) => _mod(year - 4, 60);
+
 /// The Vietnamese sexagenary (Can Chi) name for a lunar year, e.g. 2024 ->
 /// "Giáp Thìn". The cycle repeats every 60 years, so the plain year number
 /// still disambiguates which cycle and is what leap-year math is based on
